@@ -31,8 +31,26 @@
 </div>
 
 <div id="q-advanced" class="hidden">
- <table class="query-form">
-  <tr><td colspan="2"><em>Advanced search not yet implemented</em>
+ <table id="query-form">
+  <tr><td><span class="sub-header">Advanced Query</span></td><td></td></tr>
+  <tr>
+   <td class="td-name">Search Term:</td>
+   <td><input id="q2" type="text"/></td>
+  </tr>
+  <tr>
+   <td class="td-name">Postcode:</td>
+   <td><input id="qPostcode" type="text"/></td>
+  </tr>
+  <tr><td colspan="2"><hr class="pm-button-sep"></td></tr>
+  <tr>
+   <td></td>
+   <td>
+    <div class="pm-button-bar">
+     <button id="nq-pb11" onClick="resetQueryPane()">Clear form</button>
+     <button id="nq-pb12" onClick="_doQuery(0)">Execute query</button>
+    </div>
+   </td>
+  </tr>
   <tr class="hidden">
    <td class="td-name">Zone:</td>
    <td>
@@ -56,4 +74,3 @@
   <tr><td colspan="2"><em>Custom search not yet implemented</em></td></tr>
  </table>
 </div>
-  

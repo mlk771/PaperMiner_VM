@@ -437,7 +437,8 @@ function resetQueryPane ()
     $('select#z1').val('newspaper');
     break;
   case Q_ADVANCED :
-    // FIXME: todo
+	$('input#q2').val('');
+	$('select#z1').val('newspaper');
     break;
   case Q_CUSTOM :
     // FIXME: todo
@@ -932,7 +933,13 @@ function _openQuery (idx)
     newQuery(true);
     break;
   case 'a':
-    $('select#z1').val(m_currentZone);
+    //$('select#z1').val(m_currentZone);
+	var pat = /&zone=(.+)\&q=(.+)/;
+    var params = pat.exec(m_currentQuery);
+    m_currentZone = params[1];
+    m_currentTerm = params[2];
+    $('input#q2').val(decodeURIComponent(m_currentTerm));
+    newQuery(true);
     break;
   case 'c':
     break;
@@ -988,7 +995,11 @@ function _createQueryString ()
           '&q=' + encodeURIComponent(m_currentTerm);
     break;
   case Q_ADVANCED:
-    m_currentZone = $('select#z1').val();
+    //m_currentZone = $('select#z1').val();
+	m_currentZone = 'newspaper';
+	  m_currentTerm = $('input#q2').val();
+	  str = '&zone=' + m_currentZone + 
+	      '&q=' + encodeURIComponent(m_currentTerm);
     break;
   case Q_CUSTOM:
     break;
@@ -1073,7 +1084,7 @@ function _updateTimeDisplay ()
 }
 
 /**
- * Sends off a trove query using the data in the bew query form, starting at the position passed.
+ * Sends off a trove query using the data in the new query form, starting at the position passed.
  * Clears form if position < zero.
  * @param pos position in TROVE result set
  */
@@ -1727,7 +1738,11 @@ function _updateCurrQueryPane ()
       _setCurrentQueryButtonState();
       break;
     case Q_ADVANCED :
-      // FIXME: todo
+	  $('td#q11').html(m_currentTerm);
+      $('td#z11').html(m_currentZone);
+      $('td#n11').html(m_totalRecs);
+      $('td#n12').html(m_resultSet == null ? 0 : m_resultSet.length);
+      _setCurrentQueryButtonState();
       break;
     case Q_CUSTOM :
       // FIXME: todo
@@ -1808,11 +1823,15 @@ function _displayRawDataItem (id)
     else if (zoneInfo.tags[i].isLink) {
       html += '<tr class="hidden"><td>' + zoneInfo.tags[i].title + ':</td><td>' +
       '<a id="raw-trove-link" href="' + value + '" target="_blank">' + value + '</a></td></tr>';
-    }
+    }	
     else {
       html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
     }
   }
+  // Publication
+  //var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[2].tag);
+  //html += '<tr><td class="td-crud-name">' + zoneInfo.tags[2].title + ':</td><td>' + value + '</td></tr>';
+  
   html += '</table>';
   $(_selById(RAW_RECORD)).html(html);
   m_rawRecordId = id;
