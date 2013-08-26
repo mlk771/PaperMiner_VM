@@ -214,6 +214,7 @@ var m_currentSaveFormPane  = Q_SAVE;
 var m_currentQueryFormPane = Q_SIMPLE;
 var m_currentPaneSelector  = _selById(MAP_VIEW);
 var m_defaultViewSelector  = _selById(MAP_VIEW);
+var m_pos		= null;
 
 // FIXME: would be nice if this was an associative array
 var m_totalRecs    = 0;
@@ -580,6 +581,7 @@ function saveQuery (show, opt)
 function showMap (show)
 {
   _showPane(_selById(MAP_VIEW));
+  _resetMap();
 }
 
 function showHistogram (show)
@@ -1314,6 +1316,7 @@ function _initSlider ()
 function _insertPublisherMapMarker (idx, data)
 {
   var pos = new google.maps.LatLng(data.latitude, data.longitude);
+  m_pos += pos + '<br>';
   var pin = new google.maps.Marker( { position: pos, map: m_map, } );
   var isViz = (_getCheckedMapButton() === PUBLISHER_MARKER);
   pin.setTitle(data.title);
@@ -1535,6 +1538,7 @@ function _createMapLocationMarker (locnId)
 {
   var info = m_locationsCache[locnId].info;
   var pos = new google.maps.LatLng(info.latitude, info.longitude);
+  //m_pos += pos + '<br>';
   var pin = new google.maps.Marker( { position: pos, map: m_map, } );
   var isViz = (_getCheckedMapButton() === LOCATION_MARKER);
   var title = info.name;
@@ -1735,6 +1739,7 @@ function _updateCurrQueryPane ()
       $('td#z11').html(m_currentZone);
       $('td#n11').html(m_totalRecs);
       $('td#n12').html(m_resultSet == null ? 0 : m_resultSet.length);
+      $('td#pos').html(m_pos);
       _setCurrentQueryButtonState();
       break;
     case Q_ADVANCED :
