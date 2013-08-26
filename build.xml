@@ -131,13 +131,6 @@
     <exec executable="cat" outputproperty="pm.version">
         <arg line="version.txt" />
     </exec>
-    <exec executable="svn" output="/tmp/svninfo.xml" failonerror="true">
-         <arg line="info --xml" />
-    </exec>
-    
-    <xmlproperty file="/tmp/svninfo.xml" collapseattributes="true" />
-    <echo message="Build: ${pm.version} ${info.entry.commit.revision}" />
-    <echo message=" Date: ${touch.time}" />
     
     <copy todir="${war.image}/WEB-INF/dat">
       <fileset dir="${dat.dir}">
