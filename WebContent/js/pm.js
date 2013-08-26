@@ -825,6 +825,32 @@ function _resetMap ()
   m_map.setOptions(pmOptions);
 }
 
+function _postcodeMap () 
+{
+	var geocoder= new google.maps.Geocoder();
+	var address = document.getElementById('postcode-text').value +" australia";
+    geocoder.geocode( { 'address': address}, function(results, status) {
+      if (status == google.maps.GeocoderStatus.OK) {
+    	var latlng = results[0].geometry.location;
+        var pmOptions = {
+          zoom: 8,
+          mapTypeId: google.maps.MapTypeId.HYBRID, //ROADMAP
+          streetViewControl: false
+        };
+        
+        if (m_map == null) {
+          m_map = new google.maps.Map(document.getElementById(MAP_CANVAS), pmOptions);
+        }
+        m_map.setCenter(latlng);
+        m_map.setOptions(pmOptions);
+        
+      } else {
+        alert("Geocode was not successful for the following reason: " + status);
+      }
+    });
+	
+ /* */
+}
 /**
  * Macro turns a name into a JQuery ID selector
  */
