@@ -214,7 +214,8 @@ var m_currentSaveFormPane  = Q_SAVE;
 var m_currentQueryFormPane = Q_SIMPLE;
 var m_currentPaneSelector  = _selById(MAP_VIEW);
 var m_defaultViewSelector  = _selById(MAP_VIEW);
-var m_pos		= null;
+var m_pos	= "";
+var count	= 0;
 
 // FIXME: would be nice if this was an associative array
 var m_totalRecs    = 0;
@@ -824,32 +825,86 @@ function _resetMap ()
   m_map.setCenter(latlngCenter);
   m_map.setOptions(pmOptions);
 }
-
+/**
+ * 
+ * Refocus and automatically zoom-in to the given postcode number 
+ */
 function _postcodeMap () 
 {
 	var geocoder= new google.maps.Geocoder();
-	var address = document.getElementById('postcode-text').value +" australia";
+	var address = document.getElementById('postcode-text').value;
+	if (address != "") {
+		address += " australia";		
+		geocoder.geocode( { 'address': address}, function(results, status) {
+	      if (status == google.maps.GeocoderStatus.OK) {
+	    	var latlng = results[0].geometry.location;
+	        var pmOptions = {
+	          zoom: 14,
+	          mapTypeId: google.maps.MapTypeId.HYBRID, //ROADMAP
+	          streetViewControl: false
+	        };
+	        
+	        if (m_map == null) {
+	          m_map = new google.maps.Map(document.getElementById(MAP_CANVAS), pmOptions);
+	        }
+	        m_map.setCenter(latlng);
+	        m_map.setOptions(pmOptions);
+	        
+	      } else {
+	        alert("Geocode was not successful for the following reason: " + status);
+	      }
+	    });
+	} else { /*alert("Please enter a valid postcode");)*/_resetMap(); } // Zoom-out to Australia level with empty input
+ /* */
+}
+
+function _limitSearchByPostcod(pos) 
+{
+	var geocoder = new google.maps.Geocoder();
+	var postcode;
+	/*var address  = document.getElementById('qPostcode').value +" australia";
     geocoder.geocode( { 'address': address}, function(results, status) {
       if (status == google.maps.GeocoderStatus.OK) {
     	var latlng = results[0].geometry.location;
-        var pmOptions = {
-          zoom: 8,
-          mapTypeId: google.maps.MapTypeId.HYBRID, //ROADMAP
-          streetViewControl: false
-        };
-        
-        if (m_map == null) {
-          m_map = new google.maps.Map(document.getElementById(MAP_CANVAS), pmOptions);
-        }
-        m_map.setCenter(latlng);
-        m_map.setOptions(pmOptions);
-        
+        m_pos += latlng.toString() + '<br>';
       } else {
         alert("Geocode was not successful for the following reason: " + status);
       }
-    });
-	
- /* */
+    });*/
+    
+    var latlng = pos;
+    geocoder.geocode({'latLng': latlng}, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+        	console.log(results);
+        	if (results[1]) {
+        		var indice=0;
+        		for (var j=0; j<results.length; j++)
+        		{
+        			if (results[j].types[0]=='locality')
+        			{
+        				indice=j;
+        				break;
+        			}
+        		}
+        	alert('The good number is: '+j);
+        	console.log(results[j]);
+        	for (var i=0; i<results[j].address_components.length; i++)
+        	{
+        		if (results[j].address_components[i].types[0] == "postal_code") {
+        			//this is the object you are looking for
+        			postcode = results[j].address_components[i];
+        		}
+        	}
+        	m_pos += postcode.short_name + ' ';
+        	//city data
+        	//alert(city.long_name + " || " + region.long_name + " || " + country.short_name)
+        	} else {
+        		alert("No results found");
+        	}
+        } else {
+        	alert("Geocoder failed due to: " + status);
+        }
+    });	
 }
 /**
  * Macro turns a name into a JQuery ID selector
@@ -1342,7 +1397,12 @@ function _initSlider ()
 function _insertPublisherMapMarker (idx, data)
 {
   var pos = new google.maps.LatLng(data.latitude, data.longitude);
-  m_pos += pos + '<br>';
+  //m_pos += pos + '<br>';
+  if (count < 5) 
+  {
+	  _limitSearchByPostcod(pos);
+	  count++;
+  }
   var pin = new google.maps.Marker( { position: pos, map: m_map, } );
   var isViz = (_getCheckedMapButton() === PUBLISHER_MARKER);
   pin.setTitle(data.title);
@@ -1564,7 +1624,6 @@ function _createMapLocationMarker (locnId)
 {
   var info = m_locationsCache[locnId].info;
   var pos = new google.maps.LatLng(info.latitude, info.longitude);
-  //m_pos += pos + '<br>';
   var pin = new google.maps.Marker( { position: pos, map: m_map, } );
   var isViz = (_getCheckedMapButton() === LOCATION_MARKER);
   var title = info.name;
@@ -1765,7 +1824,6 @@ function _updateCurrQueryPane ()
       $('td#z11').html(m_currentZone);
       $('td#n11').html(m_totalRecs);
       $('td#n12').html(m_resultSet == null ? 0 : m_resultSet.length);
-      $('td#pos').html(m_pos);
       _setCurrentQueryButtonState();
       break;
     case Q_ADVANCED :
@@ -1773,6 +1831,7 @@ function _updateCurrQueryPane ()
       $('td#z11').html(m_currentZone);
       $('td#n11').html(m_totalRecs);
       $('td#n12').html(m_resultSet == null ? 0 : m_resultSet.length);
+      $('td#pos').html(m_pos);
       _setCurrentQueryButtonState();
       break;
     case Q_CUSTOM :
