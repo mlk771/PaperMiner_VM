@@ -539,6 +539,107 @@ public class LocationHelper
     	return list;
     }
     
+    
+    /**
+     * Locates locations matching a Latitude and Longtitude, optionally with a (short) state name and/or a (long) country name.
+     * @param locnName  Place name
+     * @param stateSName Short State name
+     * @param cntryLName Long country name
+     * @return List of location maps (same content as getLocationInfo)
+     * @throws PaperMinerException
+     */
+    public ArrayList<HashMap<String, String>> locationsLikeLatLng (float lat, float lng) throws PaperMinerException
+    {
+    	Connection con = null;
+        Statement ps = null;
+        ResultSet rs = null;
+    	ArrayList<HashMap<String, String>> list = new ArrayList<HashMap<String, String>>();
+        float diff = 0.025f;
+        String latlower = Float.toString(lat - diff);
+        String latupper = Float.toString(lat + diff);
+        String lnglower = Float.toString(lng - diff);
+        String lngupper = Float.toString(lng + diff);
+        
+        try {
+            con = DriverManager.getConnection("jdbc:apache:commons:dbcp:" + PaperMinerConstants.POOL_NAME);
+            ps = con.createStatement();
+        	StringBuffer sb = new StringBuffer(
+	        	"SELECT " +  LOCN_ID + "," + LOCN_NAME + "," + LOCN_LAT + "," + LOCN_LON + 
+	        	"," + LOCN_NW_LAT + "," + LOCN_NW_LON + "," + LOCN_SE_LAT + "," + LOCN_SE_LON + 
+	    		"," + LOCN_STATE_CODE + "," + LOCN_CNTRY_CODE +
+	    		" FROM " + LOCN_TABLE + 
+	    		" WHERE " + LOCN_LAT + " BETWEEN '" + latlower + "' " + "AND" + " '" + latupper + 
+	    		"' AND " + LOCN_LON + " BETWEEN '" + lnglower + "' " + "AND" + " '" + lngupper + "'"
+    		);
+        	/*         	
+        	//if (lat 0) {
+        		String sql = "SELECT " + AU_ID + ',' + AU_LNAME + " FROM " + AU_TABLE + " WHERE " + AU_SNAME + " like '" + stateSName + "'";
+        		rs = ps.executeQuery(sql);
+        		m_logger.debug(sql + "  RES=" + ps.getFetchSize());
+		        if (rs.isBeforeFirst()) {
+		            rs.next();
+		            sb.append(" AND " + LOCN_STATE_CODE + "='" + rs.getString(AU_ID) + "'");
+		        }
+	            rs.close();
+        	//}
+        	
+        	//if (lng.length() > 0) {
+       		String sql = "SELECT " + ISO_CN_ID + " FROM " + ISO_CN_TABLE + " WHERE " + ISO_CN_LNAME + " like '" + cntryLName + "'";
+        		rs = ps.executeQuery(sql);
+        		m_logger.debug(sql + "  RES=" + ps.getFetchSize());
+		        if (rs.isBeforeFirst()) {
+		            rs.next();
+		            sb.append(" AND " + LOCN_CNTRY_CODE + "='" + rs.getString(ISO_CN_ID) + "'");
+		        }
+	            rs.close();*/
+        	//}
+            
+        	rs = ps.executeQuery(sb.toString());
+	        if (rs.isBeforeFirst()) {
+	            while (rs.next()) {
+	            	HashMap<String, String> map = new HashMap<String, String>();
+		            map.put(LOCN_ID, Integer.toString(rs.getInt(LOCN_ID)));
+		            map.put(LOCN_NAME, rs.getString(LOCN_NAME));
+					map.put(LOCN_LAT, Double.toString(rs.getDouble(LOCN_LAT)));
+					map.put(LOCN_LON, Double.toString(rs.getDouble(LOCN_LON)));
+					map.put(LOCN_NW_LAT, Double.toString(rs.getDouble(LOCN_NW_LAT)));
+					map.put(LOCN_NW_LON, Double.toString(rs.getDouble(LOCN_NW_LON)));
+					map.put(LOCN_SE_LAT, Double.toString(rs.getDouble(LOCN_SE_LAT)));
+					map.put(LOCN_SE_LON, Double.toString(rs.getDouble(LOCN_SE_LON)));
+					
+					String [] snames = getStateNames(rs.getInt(LOCN_STATE_CODE));
+					String [] cnames = getCountryNames(rs.getInt(LOCN_CNTRY_CODE));
+		            map.put("state_sn", snames[0]);
+		            map.put("state_ln", snames[1]);
+		            map.put("iso_sn", cnames[0]);
+		            map.put("iso_ln", cnames[1]);
+		            list.add(map);
+	            }
+	            rs.close();
+	        }
+            m_logger.debug("found " + list.size() + " locations");
+        }
+        catch (SQLException ex) {
+        	String msg = "Error finding location " + lat +", "+lng;
+            m_logger.error(msg, ex);
+            throw new PaperMinerException(msg + ", see log");
+        }
+        finally {
+            if (con != null) {
+                try {
+                    con.close();
+                    if (ps != null) {
+                        ps.close();
+                    }
+                }
+                catch (SQLException ex) {
+                    m_logger.warn("SQL error during cleanup", ex);
+                }
+            }
+        }
+    	return list;
+    }
+    
     /**
      * Return array [short name, long name] for an Australian state ID
      * @param id State

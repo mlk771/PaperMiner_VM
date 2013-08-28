@@ -230,6 +230,8 @@ var m_currentTerm  = null;
 var m_currentZone  = null;
 var m_currentQuery = null;
 var m_locations    = null;
+var m_latPostcode = 0.0;
+var m_lngPostcode = 0.0;
 
 
 /**
@@ -441,6 +443,7 @@ function resetQueryPane ()
   case Q_ADVANCED :
 	$('input#q2').val('');
 	$('select#z1').val('newspaper');
+	$('input#qPostcode').val('');
     break;
   case Q_CUSTOM :
     // FIXME: todo
@@ -858,20 +861,41 @@ function _postcodeMap ()
  /* */
 }
 
+function _getLatLangFromPostCode ()
+{
+	var geocoder= new google.maps.Geocoder();
+	var address = document.getElementById('qPostcode').value;
+	if (address != "") {
+		address += " australia";		
+		geocoder.geocode( { 'address': address}, function(results, status) {
+	      if (status == google.maps.GeocoderStatus.OK) {
+	    	_latLngToFloats(results[0].geometry.location);
+	    	alert(m_latPostcode.toString() + ", " + m_lngPostcode.toString());
+	      } else {
+	        alert("Geocode was not successful for the following reason: " + status);
+	      }
+	    });
+	} else { /*alert("Please enter a valid postcode");)*/_resetMap(); } // Zoom-out to Australia level with empty input
+ /* */
+}
+
+/**
+ * 
+ * 
+ * @param latlng
+ */
+function _latLngToFloats (latlng) {
+	var llString = latlng.toString();
+	var llArray = llString.split(",");
+	m_latPostcode = parseFloat(llArray[0].substring(1, llArray[0].length -1));
+	m_lngPostcode = parseFloat(llArray[1].substring(1, llArray[1].length - 2));
+}
+
+
 function _limitSearchByPostcod(pos) 
 {
 	var geocoder = new google.maps.Geocoder();
 	var postcode;
-	/*var address  = document.getElementById('qPostcode').value +" australia";
-    geocoder.geocode( { 'address': address}, function(results, status) {
-      if (status == google.maps.GeocoderStatus.OK) {
-    	var latlng = results[0].geometry.location;
-        m_pos += latlng.toString() + '<br>';
-      } else {
-        alert("Geocode was not successful for the following reason: " + status);
-      }
-    });*/
-    
     var latlng = pos;
     geocoder.geocode({'latLng': latlng}, function(results, status) {
         if (status == google.maps.GeocoderStatus.OK) {
@@ -1398,9 +1422,11 @@ function _insertPublisherMapMarker (idx, data)
 {
   var pos = new google.maps.LatLng(data.latitude, data.longitude);
   //m_pos += pos + '<br>';
-  if (count < 5) 
+  if (count < 3) 
   {
-	  _limitSearchByPostcod(pos);
+	  _getLatLangFromPostCode();
+	  //alert(m_latPostcode + " " + m_lngPostcode);
+	  //_limitSearchByPostcod(pos);
 	  count++;
   }
   var pin = new google.maps.Marker( { position: pos, map: m_map, } );

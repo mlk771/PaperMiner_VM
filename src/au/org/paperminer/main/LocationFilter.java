@@ -227,8 +227,12 @@ public class LocationFilter implements Filter
 		String locnName = req.getParameter("ln");
 		String stateName = req.getParameter("sn");
 		String cntryName = req.getParameter("cn");
+		string lat
 		try {
 			ArrayList<HashMap<String, String>> list = m_helper.locationsLike(locnName, stateName, cntryName);
+	        m_logger.debug("locationFilter locn lookup: " + locnName + " (" + stateName + ", " + cntryName + "): " + list.size());
+	        
+	        ArrayList<HashMap<String, String>> latLongList = m_helper.locationsLikeLatLng(lat, lng)Name, cntryName);
 	        m_logger.debug("locationFilter locn lookup: " + locnName + " (" + stateName + ", " + cntryName + "): " + list.size());
 	        
             resp.setContentType("text/json");
