@@ -568,32 +568,10 @@ public class LocationHelper
 	        	"," + LOCN_NW_LAT + "," + LOCN_NW_LON + "," + LOCN_SE_LAT + "," + LOCN_SE_LON + 
 	    		"," + LOCN_STATE_CODE + "," + LOCN_CNTRY_CODE +
 	    		" FROM " + LOCN_TABLE + 
-	    		" WHERE " + LOCN_LAT + " BETWEEN '" + latlower + "' " + "AND" + " '" + latupper + 
-	    		"' AND " + LOCN_LON + " BETWEEN '" + lnglower + "' " + "AND" + " '" + lngupper + "'"
+	    		" WHERE " + LOCN_LAT + " BETWEEN '" + latlower + "' AND '" + latupper + 
+	    		"' AND " + LOCN_LON + " BETWEEN '" + lnglower + "' AND '" + lngupper + "'"
     		);
-        	/*         	
-        	//if (lat 0) {
-        		String sql = "SELECT " + AU_ID + ',' + AU_LNAME + " FROM " + AU_TABLE + " WHERE " + AU_SNAME + " like '" + stateSName + "'";
-        		rs = ps.executeQuery(sql);
-        		m_logger.debug(sql + "  RES=" + ps.getFetchSize());
-		        if (rs.isBeforeFirst()) {
-		            rs.next();
-		            sb.append(" AND " + LOCN_STATE_CODE + "='" + rs.getString(AU_ID) + "'");
-		        }
-	            rs.close();
-        	//}
         	
-        	//if (lng.length() > 0) {
-       		String sql = "SELECT " + ISO_CN_ID + " FROM " + ISO_CN_TABLE + " WHERE " + ISO_CN_LNAME + " like '" + cntryLName + "'";
-        		rs = ps.executeQuery(sql);
-        		m_logger.debug(sql + "  RES=" + ps.getFetchSize());
-		        if (rs.isBeforeFirst()) {
-		            rs.next();
-		            sb.append(" AND " + LOCN_CNTRY_CODE + "='" + rs.getString(ISO_CN_ID) + "'");
-		        }
-	            rs.close();*/
-        	//}
-            
         	rs = ps.executeQuery(sb.toString());
 	        if (rs.isBeforeFirst()) {
 	            while (rs.next()) {
@@ -620,7 +598,7 @@ public class LocationHelper
             m_logger.debug("found " + list.size() + " locations");
         }
         catch (SQLException ex) {
-        	String msg = "Error finding location " + lat +", "+lng;
+        	String msg = "Error finding location " + lat + ", "+lng;
             m_logger.error(msg, ex);
             throw new PaperMinerException(msg + ", see log");
         }

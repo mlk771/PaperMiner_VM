@@ -79,6 +79,10 @@ public class LocationFilter implements Filter
             m_logger.debug(" location filter find location(s)");
             findLocation((HttpServletRequest) req, (HttpServletResponse) resp);
         }
+        else if (remoteReq.substring(idx).startsWith("/ltln")) {
+            m_logger.debug(" location filter find location(s)");
+            findLatLongLocation((HttpServletRequest) req, (HttpServletResponse) resp);
+        }
         else if (remoteReq.substring(idx).startsWith("/rm")) {
             m_logger.debug(" location filter strikeout");
             strikeout((HttpServletRequest) req, (HttpServletResponse) resp);
@@ -97,6 +101,8 @@ public class LocationFilter implements Filter
         m_logger.debug("LocationFilter chaining complete");
         return;
 	}
+	
+	
 
 	@Override
 	public void init(FilterConfig arg0) throws ServletException 
@@ -227,13 +233,39 @@ public class LocationFilter implements Filter
 		String locnName = req.getParameter("ln");
 		String stateName = req.getParameter("sn");
 		String cntryName = req.getParameter("cn");
-		string lat
+		
 		try {
 			ArrayList<HashMap<String, String>> list = m_helper.locationsLike(locnName, stateName, cntryName);
 	        m_logger.debug("locationFilter locn lookup: " + locnName + " (" + stateName + ", " + cntryName + "): " + list.size());
 	        
-	        ArrayList<HashMap<String, String>> latLongList = m_helper.locationsLikeLatLng(lat, lng)Name, cntryName);
-	        m_logger.debug("locationFilter locn lookup: " + locnName + " (" + stateName + ", " + cntryName + "): " + list.size());
+            resp.setContentType("text/json");
+            PrintWriter pm = resp.getWriter();
+            pm.write(JSONValue.toJSONString(list));
+            pm.close();
+		}
+		catch (PaperMinerException ex) {
+			m_logger.error("lookup failed", ex);
+            req.setAttribute(PaperMinerConstants.ERROR_PAGE, "e305");
+		}
+    	catch (IOException ex) {
+            req.setAttribute(PaperMinerConstants.ERROR_PAGE, "e114");
+    	}
+	}
+	/**
+	 *  Locate an existing locations by its Latitude & Longitude values.
+	 * 
+	 * @param req
+	 * @param resp
+	 */
+	private void findLatLongLocation (HttpServletRequest req, HttpServletResponse resp)
+	{
+		String lat	= req.getParameter("lat");
+		String lng	= req.getParameter("lng");
+		
+		try {
+			ArrayList<HashMap<String, String>> list = 
+	        	m_helper.locationsLikeLatLng(Float.valueOf(lat).floatValue(), Float.valueOf(lng).floatValue());
+	        m_logger.debug("locationFilter locn lookup: " + lat + ", " + lng + " -- List Size: " + list.size());
 	        
             resp.setContentType("text/json");
             PrintWriter pm = resp.getWriter();

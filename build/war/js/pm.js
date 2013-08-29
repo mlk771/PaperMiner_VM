@@ -443,6 +443,7 @@ function resetQueryPane ()
   case Q_ADVANCED :
 	$('input#q2').val('');
 	$('select#z1').val('newspaper');
+	$('input#qPostcode').val('');
     break;
   case Q_CUSTOM :
     // FIXME: todo
@@ -856,7 +857,7 @@ function _postcodeMap ()
 	        alert("Geocode was not successful for the following reason: " + status);
 	      }
 	    });
-	} else { /*alert("Please enter a valid postcode");)*/_resetMap(); } // Zoom-out to Australia level with empty input
+	} else { _resetMap(); } // Zoom-out to Australia level with empty input
  /* */
 }
 
@@ -869,38 +870,124 @@ function _getLatLangFromPostCode ()
 		geocoder.geocode( { 'address': address}, function(results, status) {
 	      if (status == google.maps.GeocoderStatus.OK) {
 	    	_latLngToFloats(results[0].geometry.location);
+	    	alert(m_latPostcode.toString() + "~~ " + m_lngPostcode.toString());
+	    	_findLatLongLocation(0);
 	    	alert(m_latPostcode.toString() + ", " + m_lngPostcode.toString());
 	      } else {
 	        alert("Geocode was not successful for the following reason: " + status);
 	      }
 	    });
-	} else { /*alert("Please enter a valid postcode");)*/_resetMap(); } // Zoom-out to Australia level with empty input
- /* */
+	}
 }
-
+/**
+ * extracrt Lat & Long and assign them to floats
+ * 
+ * @param latlng
+ */
 function _latLngToFloats (latlng) {
 	var llString = latlng.toString();
 	var llArray = llString.split(",");
-	//alert(llArray[0].substring(1,llArray.length - 1) + ", " + llArray[0].substring(1, llArray[].length - 2));
 	m_latPostcode = parseFloat(llArray[0].substring(1, llArray[0].length -1));
 	m_lngPostcode = parseFloat(llArray[1].substring(1, llArray[1].length - 2));
 }
 
+function _findLatLongLocation (src)
+{
+	
+//  var __getNames = function(list, tag) {
+//	    var res = { sn:'', ln:'' };
+//	    for (var i = 0; i < list.length; i++) {
+//	      for (var j = 0; j < list[i].types.length; j++) {
+//	        if (list[i].types[j] === tag) {
+//	          res.sn = list[i].short_name;
+//	          res.ln = list[i].long_name;
+//	          break;
+//	        }
+//	      }
+	//alert("HERE!");
+	var __getLatLongs = function(list, tag) {
+		var res = { lat:'', lng:'' };
+	    for (var i = 0; i < list.length; i++) {
+	      for (var j = 0; j < list[i].types.length; j++) {
+	        if (list[i].types[j] === tag) {
+	          res.lat = list[i].location;
+	          res.lngn = list[i].location;
+	          alert(list[i].types[j]);
+	          break;
+	        }
+	      }
+	    }
+	    return res;
+	  };
+	  
+	  var lat = m_latPostcode;
+	  var lng = m_lngPostcode;
+	  alert(lat + ", " + lng);
+	  if (src == 0) {
+		var uri = PM_URI + '/loc/ltln?lat=' + lat.toString() + '&lng=' + lng.toString();
+		$.getJSON(uri, function (data, status, jqXHR) {
+		  if (status == "success") {
+		    if (data.length === 0) {
+		      _popupDialog(INFO, 'Lat & Long are not in the Paper Miner database.');
+		      return;
+		    }
+		    for (var i = 0; i < data.length; i++) {
+		      m_locnSelections.push(data[i]);
+		    }
+		    var locationResults = m_locnSelections[0];
+		    alert(locationResults.lat + ", test " + locationResults.lng);
+		    //_formatLocationSelections();
+		  }
+		});
+	  }
+	  else {
+	    var uri = GOOGLE_MAPS_URL + ln + 
+	    (sn.length > 0 ? '+' + sn : '') +
+	    (cn.length > 0 ? '+' + sn : '') +
+	    '&sensor=false';
+	    $.getJSON(uri, function (data, status, jqXHR) {
+	      if (status == "success") {
+	        if ( data.results.length === 0) {
+	          _popupDialog(INFO, 'No results from Google Maps for this Location.');
+	          return;
+	        }
+	        try {
+	          var list = new Array();
+	          for (var i = 0; i < data.results.length; i++) {
+	            var obj = data.results[i];
+	            var state = __getLatLongs(obj.address_components, 'administrative_area_level_1');
+	            var cntry = __getLatLongs(obj.address_components, 'country');
+	            var tmp = {
+	                id: "0",
+	                state_sn: state.sn,
+	                state_ln: state.ln,
+	                iso_sn: cntry.sn,
+	                iso_ln: cntry.ln,
+	                name: obj.address_components[0].long_name,
+	                latitude: obj.geometry.location.lat,
+	                longitude: obj.geometry.location.lng,
+	                box_nw_lat: obj.geometry.bounds.northeast.lat,
+	                box_nw_lng: obj.geometry.bounds.northeast.lng,
+	                box_se_lat: obj.geometry.bounds.southwest.lat,
+	                box_se_lng: obj.geometry.bounds.southwest.lng,
+	            };
+	            list.push(tmp);
+	          }
+	          m_locnSelections = m_locnSelections.concat(list);
+	        }
+	        catch (ex) {
+	          _popupDialog(ALERT, "The results are ambiguous. Please try specifying a state, and/or Country.");
+	        }
+	      }
+	      _formatLocationSelections();
+	    });
+	  }
+}
 
-function _limitSearchByPostcod(pos) 
+/*function _limitSearchByPostcod(pos) 
 {
 	var geocoder = new google.maps.Geocoder();
 	var postcode;
-	/*var address  = document.getElementById('qPostcode').value +" australia";
-    geocoder.geocode( { 'address': address}, function(results, status) {
-      if (status == google.maps.GeocoderStatus.OK) {
-    	var latlng = results[0].geometry.location;
-        m_pos += latlng.toString() + '<br>';
-      } else {
-        alert("Geocode was not successful for the following reason: " + status);
-      }
-    });*/
-    
     var latlng = pos;
     geocoder.geocode({'latLng': latlng}, function(results, status) {
         if (status == google.maps.GeocoderStatus.OK) {
@@ -935,6 +1022,10 @@ function _limitSearchByPostcod(pos)
         }
     });	
 }
+*/
+
+
+
 /**
  * Macro turns a name into a JQuery ID selector
  */
@@ -1426,12 +1517,10 @@ function _initSlider ()
 function _insertPublisherMapMarker (idx, data)
 {
   var pos = new google.maps.LatLng(data.latitude, data.longitude);
-  //m_pos += pos + '<br>';
-  if (count < 3) 
+  if (count < 1) 
   {
 	  _getLatLangFromPostCode();
 	  //alert(m_latPostcode + " " + m_lngPostcode);
-	  //_limitSearchByPostcod(pos);
 	  count++;
   }
   var pin = new google.maps.Marker( { position: pos, map: m_map, } );
