@@ -232,6 +232,7 @@ var m_currentQuery = null;
 var m_locations    = null;
 var m_latPostcode = 0.0;
 var m_lngPostcode = 0.0;
+var m_text = '';
 
 
 /**
@@ -1283,11 +1284,13 @@ function _updateTimeDisplay ()
  */
 function _doQuery (pos)
 {
-  // ASSERT m_key != null
+
+	// ASSERT m_key != null
   if (pos === 0) {
     _resetState();
     $('#cc-pb11').button('enable');   
-
+	m_text =$('input#qPublisher').val();
+	alert(m_text);
   }
   var queryId = m_queryId;
   if (m_fetchSize < MAX_FETCH_SIZE) {
@@ -1321,6 +1324,7 @@ function _doQuery (pos)
   $('#busy-box').activity();
   _updateCurrQueryPane();
 }
+
 
 /**
  * Extracts records from a TROVE response placing them in global array.
@@ -2011,35 +2015,68 @@ function _getZoneInfo (zone)
  */
 function _displayRawDataItem (id)
 {
-  var rec = m_resultSet[id];
-  var zoneInfo = _getZoneInfo(rec.zone);
-  var html = '<table id="raw-record"><tr><td class="td-crud-name">Zone:</td><td>' + rec.zone + '</td></tr>';
-  for (var i = 0; i < zoneInfo.tags.length; i++) {
-    // have to eval this as tag may be double level dotted ref
-    var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[i].tag);
-    if ((value === null) && (zoneInfo.tags[i].tag == 'text')) {
-      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
-    }
-    else if (zoneInfo.tags[i].isLink) {
-      html += '<tr class="hidden"><td>' + zoneInfo.tags[i].title + ':</td><td>' +
-      '<a id="raw-trove-link" href="' + value + '" target="_blank">' + value + '</a></td></tr>';
-    }	
-    else {
-      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
-    }
-  }
-  // Publication
-  //var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[2].tag);
-  //html += '<tr><td class="td-crud-name">' + zoneInfo.tags[2].title + ':</td><td>' + value + '</td></tr>';
-  
-  html += '</table>';
-  $(_selById(RAW_RECORD)).html(html);
-  m_rawRecordId = id;
-  if (m_currentZone === 'newspaper') {
-    $('button#rdv-pb1').button('enable');
-  }
-  $('button#rdv-pb3').button('enable');
-}
+	  var rec = m_resultSet[id];
+	  var zoneInfo = _getZoneInfo(rec.zone);
+	  var html = '<table id="raw-record"><tr><td class="td-crud-name">Zone:</td><td>' + rec.zone + '</td></tr>';  
+	  switch (m_currentQueryFormPane) {
+	  case Q_SIMPLE : 
+		  for (var i = 0; i < zoneInfo.tags.length; i++) {
+			    // have to eval this as tag may be double level dotted ref
+			    var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[i].tag);
+			    if ((value === null) && (zoneInfo.tags[i].tag == 'text')) {
+			      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
+			    }
+			    else if (zoneInfo.tags[i].isLink) {
+			      html += '<tr class="hidden"><td>' + zoneInfo.tags[i].title + ':</td><td>' +
+			      '<a id="raw-trove-link" href="' + value + '" target="_blank">' + value + '</a></td></tr>';
+			    }	
+			    else {
+			      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
+			    }
+			  }
+		  break;
+	  case Q_ADVANCED :
+		// Publication
+		  for (var i = 0; i < zoneInfo.tags.length; i++) {
+			    // have to eval this as tag may be double level dotted ref
+			    var values = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[2].tag);
+			    alert(m_text);
+			    alert(values);
+			    if(values === m_text){
+			    	var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[i].tag);
+			    	if ((value === null) && (zoneInfo.tags[i].tag == 'text')) {
+			    		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
+			    	}
+			    	else if (zoneInfo.tags[i].isLink) {
+			    		html += '<tr class="hidden"><td>' + zoneInfo.tags[i].title + ':</td><td>' +
+			    		'<a id="raw-trove-link" href="' + value + '" target="_blank">' + value + '</a></td></tr>';
+			    	}		
+			    	else {
+			    		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
+			    	}
+		  		}
+			  }
+		  //var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[1].tag);
+		  if(value === $('input#qPublisher').val){	  
+			  var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[1].tag);
+			 html += '<tr><td class="td-crud-name">' + zoneInfo.tags[1].title + ':</td><td>' + value + '</td></tr>';
+		  }
+	  
+	  break;
+	  case Q_CUSTOM :
+	    // FIXME: todo
+	    break;
+	  }
+	  
+	  html += '</table>';
+	  $(_selById(RAW_RECORD)).html(html);
+	  m_rawRecordId = id;
+	  if (m_currentZone === 'newspaper') {
+	    $('button#rdv-pb1').button('enable');
+	  }
+	  $('button#rdv-pb3').button('enable');
+	}
+
 
 /**
  * Retrieve full text and display in Location editor Pane
