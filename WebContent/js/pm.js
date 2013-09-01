@@ -2039,10 +2039,10 @@ function _displayRawDataItem (id)
 		// Publication
 		  for (var i = 0; i < zoneInfo.tags.length; i++) {
 			    // have to eval this as tag may be double level dotted ref
-			    var values = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[2].tag);
-			    alert(m_text);
-			    alert(values);
-			    if(values === m_text){
+			    var values = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[2].tag); 
+			    var match = (values.indexOf(m_text)> -1);
+			   // alert(match);
+			    if(match){
 			    	var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[i].tag);
 			    	if ((value === null) && (zoneInfo.tags[i].tag == 'text')) {
 			    		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
