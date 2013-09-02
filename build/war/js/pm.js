@@ -1290,7 +1290,7 @@ function _doQuery (pos)
     _resetState();
     $('#cc-pb11').button('enable');   
 	m_text =$('input#qPublisher').val();
-	alert(m_text);
+	//alert(m_text);
   }
   var queryId = m_queryId;
   if (m_fetchSize < MAX_FETCH_SIZE) {
@@ -2198,11 +2198,16 @@ function _sortRaw (sortType)
       for (var i = 0, j = 0; i < m_resultSet.length; ++i) {
         var zoneInfo = _getZoneInfo(m_resultSet[i].zone);
         if ((zoneInfo.stag.length > 0) && isInRange(i)) {
-          var srcId = eval('m_resultSet[i].data.' + zoneInfo.stag);
-          var lab = (typeof m_pubCache[srcId] !== UNDEF) ? m_pubCache[srcId].title : '';
-          var srcid = '000000' + srcId;
-          tmp[j++] = { idx: i, val: srcid.substring(srcid.length - 6, srcid.length), hover: lab };
-        }
+        	var values = eval('m_resultSet[i].data.' + zoneInfo.tags[2].tag); 
+		    var match = (values.indexOf(m_text)> -1);
+		   // alert(match);
+		    if(match){
+        	var srcId = eval('m_resultSet[i].data.' + zoneInfo.stag);
+        	var lab = (typeof m_pubCache[srcId] !== UNDEF) ? m_pubCache[srcId].title : '';
+        	var srcid = '000000' + srcId;
+        	tmp[j++] = { idx: i, val: srcid.substring(srcid.length - 6, srcid.length), hover: lab };
+		    }
+	    }
       }
     }
   }
