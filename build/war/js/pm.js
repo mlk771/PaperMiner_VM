@@ -445,6 +445,7 @@ function resetQueryPane ()
 	$('input#q2').val('');
 	$('select#z1').val('newspaper');
 	$('input#qPostcode').val('');
+	$('input#qPublisher').val('');
     break;
   case Q_CUSTOM :
     // FIXME: todo
