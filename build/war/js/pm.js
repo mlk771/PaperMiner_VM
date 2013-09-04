@@ -1191,7 +1191,7 @@ function _createQueryString ()
     break;
   case Q_ADVANCED:
     //m_currentZone = $('select#z1').val();
-	m_currentZone = 'newspaper';
+	m_currentZone = $('select#z1').val();  //'newspaper';
 	  m_currentTerm = $('input#q2').val();
 	  str = '&zone=' + m_currentZone + 
 	      '&q=' + encodeURIComponent(m_currentTerm);
@@ -2041,7 +2041,7 @@ function _displayRawDataItem (id)
 		  for (var i = 0; i < zoneInfo.tags.length; i++) {
 			    // have to eval this as tag may be double level dotted ref
 			    var values = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[2].tag); 
-			    var match = (values.indexOf(m_text)> -1);
+			    var match = (values.indexOf(m_text) > -1);
 			   // alert(match);
 			    if(match){
 			    	var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[i].tag);
