@@ -620,10 +620,17 @@ function showRawResults (show)
     _createPane(RAW_VIEW, callback, null);
   }
   
-  if (show) {
-    _sortRaw(4);
-    _showPane(_selById(RAW_VIEW));
+
+    if (show) {
+   if (m_text != ''){
+	   _sortRaw(3); 
+   } else { _sortRaw(4);}
+   _showPane(_selById(RAW_VIEW));
   }
+  //if (show) {
+	//_sortRaw(3); 
+	//_showPane(_selById(RAW_VIEW));
+  //}
 }
 
 /**
