@@ -233,6 +233,7 @@ var m_locations    = null;
 var m_latPostcode = 0.0;
 var m_lngPostcode = 0.0;
 var m_text = '';
+var m_YearSet		= null;
 
 
 /**
@@ -260,6 +261,7 @@ function init ()
   currentQuery(false);
   showRawResults(false);
   locnEdit(false);
+  showHistogram(false);
 }
 
 /**
@@ -591,11 +593,101 @@ function showMap (show)
 }
 
 function showHistogram (show)
-{
+{ 
   if ($(_selById(HIST_VIEW)).length === 0) {
     _createPane(HIST_VIEW, null, null);
   }
-  _showPane(_selById(HIST_VIEW));
+  if(show)
+  {
+	$("#histogram-container").empty();
+	var startYear = 1800;
+ 	var endYear = 1956;
+ 	var interval = document.getElementById('interval-input').value;
+ 	
+    //alert(numberOfElements.toString());
+
+	/*var results = new Array(
+     [10.3,'Jan','#f3f3f3'],
+     [15.2,'Feb','#f4f4f4'],
+     [13.1,'Mar','#cccccc'],
+     [16.3,'Apr','#333333'],
+     [14.5,'May','#666666']);
+ 	*/
+	//alert(m_YearSet[0]);
+	
+ 	var results = _getResultsByYearRange(startYear, endYear, interval);// [4,8,181];//
+ 	var labels = _getHistogramLabels(startYear, endYear, interval);//['a','b','a'];//
+ 	//alert(_getResultsByYearRange(startYear, endYear, interval).toString());
+ 	//alert(_getHistogramLabels(startYear, endYear, interval).toString());
+ 	//alert(m_YearSet.toString());
+ 	var format = new Array();
+ 	for ( var idx = 0; idx < results.length; idx++) {
+		var tempArray = new Array(
+			     [results[idx], labels[idx], '#0000FF']);
+		
+		format.push(tempArray[0]);
+	}
+ 	
+//	$.jqplot('histogram-container', [results], {
+//	    seriesDefaults: {
+//	        renderer:$.jqplot.BarRenderer,
+//	        pointLabels: { show: true }
+//	    },
+//	    axes: {
+//	        xaxis: {
+//	            renderer: $.jqplot.CategoryAxisRenderer,
+//	            ticks: labels
+//	        }
+//	    }
+//	});
+   $('#histogram-container').jqBarGraph({ data: format });
+	  _showPane(_selById(HIST_VIEW));
+  }
+}
+
+
+function _getResultsByYearRange (start, end, interval) 
+{
+	var numberOfElements = Math.ceil((end - start) /  interval);
+	
+	// Init array to the length of numbethrOfElements
+	var results = new Array();
+	for ( var index = 0; index < numberOfElements; index++) {
+		results.push(0);
+		//alert(index.toString());
+	}
+	//alert(results.toString());
+	// Tally up data to results array
+	var index;
+	var year;
+	for ( var idx = 0; idx < m_YearSet.length; idx++) {
+		
+	//for ( result in m_resultSet) {
+		var zoneInfo = ZONE_NEWSPAPER;//_getZoneInfo(result.zone);
+		if (zoneInfo.dtag.length > 0) {
+		    //var date = eval('m_resultSet[idx].data.' + zoneInfo.dtag);
+		    var date = parseInt(m_YearSet[idx]);
+		    year = date;
+		    //alert(year.toString());
+			index = Math.floor(((year - start) / interval));//year - (year % interval);
+			if(index < results.length && index > 0) {
+				results[index]++;
+			}
+		}
+	}
+	//alert("sdfgfg     "+results.toString());
+	return results;
+}
+
+function _getHistogramLabels (start, end, interval) {
+	var numberOfElements = Math.ceil((end - start) /  interval);
+	
+	// Init array to the length of numbethrOfElements
+	var results = new Array();
+	for ( var index = 0; index < numberOfElements; index++) {
+		results.push((start + index * interval).toString() + "+");
+	}
+	return results;
 }
 
 function showCloud (show)
@@ -619,18 +711,12 @@ function showRawResults (show)
     };
     _createPane(RAW_VIEW, callback, null);
   }
-  
-
-    if (show) {
+  if (show) {
    if (m_text != ''){
 	   _sortRaw(3); 
    } else { _sortRaw(4);}
    _showPane(_selById(RAW_VIEW));
   }
-  //if (show) {
-	//_sortRaw(3); 
-	//_showPane(_selById(RAW_VIEW));
-  //}
 }
 
 /**
@@ -1255,6 +1341,7 @@ function _resetState ()
   m_locationsSum = 0;
   m_trefIndex = new Array();
   m_resultSet = new Array();
+  m_YearSet  = new Array();
   m_yearCount = new Array();
   m_locations = new Array();
   m_rawDateIndex = new Array();
@@ -1384,7 +1471,14 @@ function _processData (data, pos, id)
         m_run = false;
         ++m_queryId;
       }
+      m_YearSet = new Array();
+      for ( var index = 0; index < m_resultSet.length; index++) {
+    	  m_YearSet.push(m_resultSet[index].data.date.toString().split("-")[0]); 
+	}
+     // alert(m_resultSet[0].data.date.toString().split("-")[0]);
+     // alert(m_YearSet[0].toString());
        
+      
       _updateLocationRefs(pos);
       _updateMapDisplay(pos);
       _updateCurrQueryPane();

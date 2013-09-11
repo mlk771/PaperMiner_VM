@@ -1,4 +1,4 @@
-package tests;
+package au.org.paperminer.tests;
 
 import java.util.regex.Pattern;
 import java.util.concurrent.TimeUnit;

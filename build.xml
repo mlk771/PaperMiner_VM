@@ -256,6 +256,7 @@
         <pathelement path="${tomcat-lib-dir}/servlet-api.jar"/>
       </classpath>
       <exclude name="**/util/*" />
+   	  <exclude name="**/tests/*"/>
     </javac>
   </target>
   
