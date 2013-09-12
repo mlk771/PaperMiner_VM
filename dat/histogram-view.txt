@@ -10,6 +10,7 @@
 		<td>
 			<input id="interval-input" type="textbox" size="4" maxlength="3" value="10">
 			<button id="histo-button">Refresh</button>
+		
 	</tr>
 </table>
 

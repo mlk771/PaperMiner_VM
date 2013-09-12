@@ -35,15 +35,26 @@
   <tr><td><span class="sub-header">Advanced Query</span></td><td></td></tr>
   <tr>
    <td class="td-name">Search Term:</td>
-   <td><input id="q2" type="text"/></td>
-  </tr>
-  <tr>
-   <td class="td-name">Postcode:</td>
-   <td><input id="qPostcode" type="text" disabled="true"/></td>
+   <td>
+     <input style="width: 175px" id="q2" type="text"/>
+	 <select id="boolOp">
+	   <option></option>	 
+	   <option>AND</option>
+	   <option>OR</option>
+	   <option>NOT</option>
+	  </select>
+	  <input id="q2Extra" style="width: 200px" type="text"/>
+   </td>
   </tr>
   <tr>
    <td class="td-name">Publisher:</td>
-   <td><input id="qPublisher" type="text"/></td>
+   <td><input id="qPublisher" style="width: 200px" type="text"/></td>
+  </tr>
+  <tr>
+   <td class="td-name">Publication:</td>
+   <td><select id="publication-list">
+   <script type="text/javascript">  window.onload = getFullnewspaperTitles();  </script>
+   </td>
   </tr>
   <tr><td colspan="2"><hr class="pm-button-sep"></td></tr>
   <tr>
@@ -52,6 +63,7 @@
     <div class="pm-button-bar">
      <button id="nq-pb11" onClick="resetQueryPane()">Clear form</button>
      <button id="nq-pb12" onClick="_doQuery(0)">Execute query</button>
+     <button id="nq-pb13" onClick="addOption()">Get Details</button>
     </div>
    </td>
   </tr>

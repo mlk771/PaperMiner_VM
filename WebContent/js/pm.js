@@ -216,6 +216,9 @@ var m_currentPaneSelector  = _selById(MAP_VIEW);
 var m_defaultViewSelector  = _selById(MAP_VIEW);
 var m_pos	= "";
 var count	= 0;
+var m_booleanOp = '';
+var m_advTerm1 = '';
+var m_advTerm2 = '';
 
 // FIXME: would be nice if this was an associative array
 var m_totalRecs    = 0;
@@ -234,6 +237,7 @@ var m_latPostcode = 0.0;
 var m_lngPostcode = 0.0;
 var m_text = '';
 var m_YearSet		= null;
+var m_newspaperTitles = [];
 
 
 /**
@@ -446,7 +450,7 @@ function resetQueryPane ()
   case Q_ADVANCED :
 	$('input#q2').val('');
 	$('select#z1').val('newspaper');
-	$('input#qPostcode').val('');
+	$('input#q2Extra').val('');
 	$('input#qPublisher').val('');
     break;
   case Q_CUSTOM :
@@ -476,6 +480,7 @@ function newQuery (show)
     }
     else {
       _showPane(_selById(NEW_QUERY_PANE));
+      addOption();
     }
   }
 }
@@ -847,6 +852,43 @@ function refreshRecord ()
   }
 }
 
+
+function getFullnewspaperTitles ()
+{
+  //http://api.trove.nla.gov.au/newspaper/titles?key=<INSERT KEY>
+  var uri = TROVE_URL + 'newspaper/titles' + 
+  '?key=' + m_user.key + 
+  '&encoding=json' +
+  '&include=articletext' + 
+  '&callback=?';
+ // alert(uri.toString());
+    $.getJSON(uri, function (data, status, jqXHR) {
+    	//alert(status.toString());
+      if (status == "success") {
+    	//  alert('success!');
+    	  m_newspaperTitles[data.response.records.newspaper.length];
+        for ( var idx = 0; idx < data.response.records.newspaper.length; idx++) {
+        	m_newspaperTitles[idx] = data.response.records.newspaper[idx].title;
+		}
+        //alert(m_newspaperTitles[12].toString());
+      }
+    });
+    addOption();
+}
+
+
+function addOption()
+{ 
+	//getFullnewspaperTitles();
+	var itemid = document.getElementById('publication-list');	
+	for ( var idx = 0; idx < m_newspaperTitles.length; idx++) {
+		var optn = document.createElement("option");
+		optn.text = m_newspaperTitles[idx];
+		optn.value = idx;
+		itemid.add(optn);
+	}
+}
+
 function locnEdit (show)
 {
   if ($(_selById(LOCN_EDIT_PANE)).length === 0) {
@@ -956,118 +998,118 @@ function _postcodeMap ()
  /* */
 }
 
-function _getLatLangFromPostCode ()
-{
-	var geocoder= new google.maps.Geocoder();
-	var address = document.getElementById('qPostcode').value;
-	if (address != "") {
-		address += " australia";		
-		geocoder.geocode( { 'address': address}, function(results, status) {
-	      if (status == google.maps.GeocoderStatus.OK) {
-	    	_latLngToFloats(results[0].geometry.location);
-	    	alert(m_latPostcode.toString() + "~~ " + m_lngPostcode.toString());
-	    	_findLatLongLocation(0);
-	    	alert(m_latPostcode.toString() + ", " + m_lngPostcode.toString());
-	      } else {
-	        alert("Geocode was not successful for the following reason: " + status);
-	      }
-	    });
-	}
-}
+//function _getLatLangFromPostCode ()
+//{
+//	var geocoder= new google.maps.Geocoder();
+//	var address = document.getElementById('qPostcode').value;
+//	if (address != "") {
+//		address += " australia";		
+//		geocoder.geocode( { 'address': address}, function(results, status) {
+//	      if (status == google.maps.GeocoderStatus.OK) {
+//	    	_latLngToFloats(results[0].geometry.location);
+//	    	alert(m_latPostcode.toString() + "~~ " + m_lngPostcode.toString());
+//	    	_findLatLongLocation(0);
+//	    	alert(m_latPostcode.toString() + ", " + m_lngPostcode.toString());
+//	      } else {
+//	        alert("Geocode was not successful for the following reason: " + status);
+//	      }
+//	    });
+//	}
+//}
 /**
  * extracrt Lat & Long and assign them to floats
  * 
  * @param latlng
  */
-function _latLngToFloats (latlng) {
-	var llString = latlng.toString();
-	var llArray = llString.split(",");
-	m_latPostcode = parseFloat(llArray[0].substring(1, llArray[0].length -1));
-	m_lngPostcode = parseFloat(llArray[1].substring(1, llArray[1].length - 2));
-}
+//function _latLngToFloats (latlng) {
+//	var llString = latlng.toString();
+//	var llArray = llString.split(",");
+//	m_latPostcode = parseFloat(llArray[0].substring(1, llArray[0].length -1));
+//	m_lngPostcode = parseFloat(llArray[1].substring(1, llArray[1].length - 2));
+//}
 
-function _findLatLongLocation (src)
-{
-	// FIXME: clean up some stuff here 
-	//alert("HERE!");
-	var __getLatLongs = function(list, tag) {
-		var res = { lat:'', lng:'' };
-	    for (var i = 0; i < list.length; i++) {
-	      for (var j = 0; j < list[i].types.length; j++) {
-	        if (list[i].types[j] === tag) {
-	          res.lat = list[i].location;
-	          res.lngn = list[i].location;
-	          alert(list[i].types[j]);
-	          break;
-	        }
-	      }
-	    }
-	    return res;
-	  };
-	  
-	  var lat = m_latPostcode;
-	  var lng = m_lngPostcode;
-	  alert(lat + ", " + lng);
-	  if (src == 0) {
-		var uri = PM_URI + '/loc/ltln?lat=' + lat.toString() + '&lng=' + lng.toString();
-		$.getJSON(uri, function (data, status, jqXHR) {
-		  if (status == "success") {
-		    if (data.length === 0) {
-		      _popupDialog(INFO, 'Lat & Long are not in the Paper Miner database.');
-		      return;
-		    }
-		    for (var i = 0; i < data.length; i++) {
-		      m_locnSelections.push(data[i]);
-		    }
-		    var locationResults = m_locnSelections[0];
-		    alert(locationResults.lat + ", test " + locationResults.lng);
-		    //_formatLocationSelections();
-		  }
-		});
-	  }
-	  else {
-	    var uri = GOOGLE_MAPS_URL + ln + 
-	    (sn.length > 0 ? '+' + sn : '') +
-	    (cn.length > 0 ? '+' + sn : '') +
-	    '&sensor=false';
-	    $.getJSON(uri, function (data, status, jqXHR) {
-	      if (status == "success") {
-	        if ( data.results.length === 0) {
-	          _popupDialog(INFO, 'No results from Google Maps for this Location.');
-	          return;
-	        }
-	        try {
-	          var list = new Array();
-	          for (var i = 0; i < data.results.length; i++) {
-	            var obj = data.results[i];
-	            var state = __getLatLongs(obj.address_components, 'administrative_area_level_1');
-	            var cntry = __getLatLongs(obj.address_components, 'country');
-	            var tmp = {
-	                id: "0",
-	                state_sn: state.sn,
-	                state_ln: state.ln,
-	                iso_sn: cntry.sn,
-	                iso_ln: cntry.ln,
-	                name: obj.address_components[0].long_name,
-	                latitude: obj.geometry.location.lat,
-	                longitude: obj.geometry.location.lng,
-	                box_nw_lat: obj.geometry.bounds.northeast.lat,
-	                box_nw_lng: obj.geometry.bounds.northeast.lng,
-	                box_se_lat: obj.geometry.bounds.southwest.lat,
-	                box_se_lng: obj.geometry.bounds.southwest.lng,
-	            };
-	            list.push(tmp);
-	          }
-	          m_locnSelections = m_locnSelections.concat(list);
-	        }
-	        catch (ex) {
-	          _popupDialog(ALERT, "The results are ambiguous. Please try specifying a state, and/or Country.");
-	        }
-	      }
-	      _formatLocationSelections();
-	    });
-	  }
-}
+//function _findLatLongLocation (src)
+//{
+//	// FIXME: clean up some stuff here 
+//	//alert("HERE!");
+//	var __getLatLongs = function(list, tag) {
+//		var res = { lat:'', lng:'' };
+//	    for (var i = 0; i < list.length; i++) {
+//	      for (var j = 0; j < list[i].types.length; j++) {
+//	        if (list[i].types[j] === tag) {
+//	          res.lat = list[i].location;
+//	          res.lngn = list[i].location;
+//	          alert(list[i].types[j]);
+//	          break;
+//	        }
+//	      }
+//	    }
+//	    return res;
+//	  };
+//	  
+//	  var lat = m_latPostcode;
+//	  var lng = m_lngPostcode;
+//	  alert(lat + ", " + lng);
+//	  if (src == 0) {
+//		var uri = PM_URI + '/loc/ltln?lat=' + lat.toString() + '&lng=' + lng.toString();
+//		$.getJSON(uri, function (data, status, jqXHR) {
+//		  if (status == "success") {
+//		    if (data.length === 0) {
+//		      _popupDialog(INFO, 'Lat & Long are not in the Paper Miner database.');
+//		      return;
+//		    }
+//		    for (var i = 0; i < data.length; i++) {
+//		      m_locnSelections.push(data[i]);
+//		    }
+//		    var locationResults = m_locnSelections[0];
+//		    alert(locationResults.lat + ", test " + locationResults.lng);
+//		    //_formatLocationSelections();
+//		  }
+//		});
+//	  }
+//	  else {
+//	    var uri = GOOGLE_MAPS_URL + ln + 
+//	    (sn.length > 0 ? '+' + sn : '') +
+//	    (cn.length > 0 ? '+' + sn : '') +
+//	    '&sensor=false';
+//	    $.getJSON(uri, function (data, status, jqXHR) {
+//	      if (status == "success") {
+//	        if ( data.results.length === 0) {
+//	          _popupDialog(INFO, 'No results from Google Maps for this Location.');
+//	          return;
+//	        }
+//	        try {
+//	          var list = new Array();
+//	          for (var i = 0; i < data.results.length; i++) {
+//	            var obj = data.results[i];
+//	            var state = __getLatLongs(obj.address_components, 'administrative_area_level_1');
+//	            var cntry = __getLatLongs(obj.address_components, 'country');
+//	            var tmp = {
+//	                id: "0",
+//	                state_sn: state.sn,
+//	                state_ln: state.ln,
+//	                iso_sn: cntry.sn,
+//	                iso_ln: cntry.ln,
+//	                name: obj.address_components[0].long_name,
+//	                latitude: obj.geometry.location.lat,
+//	                longitude: obj.geometry.location.lng,
+//	                box_nw_lat: obj.geometry.bounds.northeast.lat,
+//	                box_nw_lng: obj.geometry.bounds.northeast.lng,
+//	                box_se_lat: obj.geometry.bounds.southwest.lat,
+//	                box_se_lng: obj.geometry.bounds.southwest.lng,
+//	            };
+//	            list.push(tmp);
+//	          }
+//	          m_locnSelections = m_locnSelections.concat(list);
+//	        }
+//	        catch (ex) {
+//	          _popupDialog(ALERT, "The results are ambiguous. Please try specifying a state, and/or Country.");
+//	        }
+//	      }
+//	      _formatLocationSelections();
+//	    });
+//	  }
+//}
 
 /*function _limitSearchByPostcod(pos) 
 {
@@ -1283,11 +1325,25 @@ function _createQueryString ()
           '&q=' + encodeURIComponent(m_currentTerm);
     break;
   case Q_ADVANCED:
-    //m_currentZone = $('select#z1').val();
-	m_currentZone = $('select#z1').val();  //'newspaper';
-	  m_currentTerm = $('input#q2').val();
-	  str = '&zone=' + m_currentZone + 
+      //m_currentZone = $('select#z1').val();
+	  m_currentZone = $('select#z1').val();  //'newspaper';
+	  m_advTerm1  	= $('input#q2').val();
+	  m_booleanOp 	= $('select#boolOp').val();
+	  m_advTerm2  	= $('input#q2Extra').val();
+	  
+	  m_currentTerm =  m_advTerm1 ;
+	  if (m_advTerm2 != ''){
+		  m_currentTerm += '%20' + m_booleanOp + '%20' + m_advTerm2;// + '%22';
+		  str = '&zone=' + m_currentZone + 
+	      '&q=' + m_currentTerm;
+		  //alert(str.toString());
+	  }
+	  else 
+	  {
+		  str = '&zone=' + m_currentZone + 
 	      '&q=' + encodeURIComponent(m_currentTerm);
+	  }
+	  //alert(str.toString());
     break;
   case Q_CUSTOM:
     break;
@@ -1346,7 +1402,8 @@ function _resetState ()
   m_locations = new Array();
   m_rawDateIndex = new Array();
   m_locationsCache = new Array();
-  m_currentQuery = _createQueryString();
+  m_currentQuery = _createQueryString(); 
+  m_newspaperTitles = new Array();
   $('div#raw-list-container').html('');
   $('div#raw-record-container').html('');
   $('#ctl-table button').button('disable');   
@@ -1379,13 +1436,11 @@ function _updateTimeDisplay ()
  */
 function _doQuery (pos)
 {
-
 	// ASSERT m_key != null
   if (pos === 0) {
     _resetState();
     $('#cc-pb11').button('enable');   
 	m_text =$('input#qPublisher').val();
-	//alert(m_text);
   }
   var queryId = m_queryId;
   if (m_fetchSize < MAX_FETCH_SIZE) {
@@ -1395,7 +1450,6 @@ function _doQuery (pos)
             '&s=' + pos + '&n=' + m_fetchSize +
             '&encoding=json' + 
             '&callback=?';
-
   $.getJSON(uri, function (data, status, jqXHR) {
       try {
         if (status == "success") {
@@ -1613,12 +1667,12 @@ function _initSlider ()
 function _insertPublisherMapMarker (idx, data)
 {
   var pos = new google.maps.LatLng(data.latitude, data.longitude);
-  if (count < 1) 
-  {
-	  _getLatLangFromPostCode();
-	  //alert(m_latPostcode + " " + m_lngPostcode);
-	  count++;
-  }
+//  if (count < 1) 
+//  {
+//	  _getLatLangFromPostCode();
+//	  //alert(m_latPostcode + " " + m_lngPostcode);
+//	  count++;
+//  }
   var pin = new google.maps.Marker( { position: pos, map: m_map, } );
   var isViz = (_getCheckedMapButton() === PUBLISHER_MARKER);
   pin.setTitle(data.title);
@@ -2043,7 +2097,7 @@ function _updateCurrQueryPane ()
       _setCurrentQueryButtonState();
       break;
     case Q_ADVANCED :
-	  $('td#q11').html(m_currentTerm);
+	  $('td#q11').html(m_advTerm1 + ' ' + m_booleanOp + ' ' + m_advTerm2);
       $('td#z11').html(m_currentZone);
       $('td#n11').html(m_totalRecs);
       $('td#n12').html(m_resultSet == null ? 0 : m_resultSet.length);
@@ -2159,7 +2213,7 @@ function _displayRawDataItem (id)
 		  		}
 			  }
 		  //var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[1].tag);
-		  if(value === $('input#qPublisher').val){	  
+		  if(value === $('select#qPublisher').val){	  
 			  var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[1].tag);
 			 html += '<tr><td class="td-crud-name">' + zoneInfo.tags[1].title + ':</td><td>' + value + '</td></tr>';
 		  }
@@ -2454,7 +2508,8 @@ function _findLocation (src)
           }
           m_locnSelections = m_locnSelections.concat(list);
         }
-        catch (ex) {
+        catch (ex)
+        {
           _popupDialog(ALERT, "The results are ambiguous. Please try specifying a state, and/or Country.");
         }
       }
