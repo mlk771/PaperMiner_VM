@@ -1,22 +1,37 @@
 <h3>Histogram</h3>
 </br>
 </br>
-<div id="histogram-container" style="width:1000px; height:400px;"></div>
+<div id="chart-container" style="width:1000px; height:400px;">
+	
+</div>
+<div id="chartpseudotooltip"></div>
 <table>
 	<tr>
+	<td>
+	<button id ="toggle-charts-button" onclick="_toggleChart()">Toggle chart</button>
+	</td>
 		<td>
 		Interval:
 		</td>
 		<td>
 			<input id="interval-input" type="textbox" size="4" maxlength="3" value="10">
+		</td>
+		<td>
+		Year From:
+		</td>
+		<td>
+			<input id="year-start" type="textbox" size="4" maxlength="4" value="1860">
+			<span>   to:</span>
+			<input id="year-end" type="textbox" size="4" maxlength="4" value="1980">
 			<button id="histo-button">Refresh</button>
+		</td>
+		
 	</tr>
 </table>
 
 <script type="text/javascript">
  	$("#histo-button").click(function () {
-    	$("#histogram-container").empty();
+    	$("#chart-container").empty();
     	showHistogram(true);
-	});
-	
+	});	
 </script>

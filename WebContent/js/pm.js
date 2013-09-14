@@ -197,7 +197,8 @@ var USER_VALIDATED   =   2;
 var FADE_TD1         = 200;
 var FADE_TD2         = 350;
 var PREP_SAVE_QUERY  = 'prep';
-
+var HISTOGRAM_TOGGLED = 0;
+var PIE_TOGGLED	  =     1; 
 // State variables
 var m_run            = false;
 var m_paused         = false;
@@ -238,6 +239,7 @@ var m_lngPostcode = 0.0;
 var m_text = '';
 var m_YearSet		= null;
 var m_newspaperTitles = [];
+var m_chartType		 = HISTOGRAM_TOGGLED;
 
 
 /**
@@ -598,58 +600,106 @@ function showMap (show)
 }
 
 function showHistogram (show)
-{ 
+{
   if ($(_selById(HIST_VIEW)).length === 0) {
-    _createPane(HIST_VIEW, null, null);
+	  _createPane(HIST_VIEW, null, null);
   }
   if(show)
   {
-	$("#histogram-container").empty();
-	var startYear = 1800;
- 	var endYear = 1956;
- 	var interval = document.getElementById('interval-input').value;
- 	
-    //alert(numberOfElements.toString());
 
-	/*var results = new Array(
-     [10.3,'Jan','#f3f3f3'],
-     [15.2,'Feb','#f4f4f4'],
-     [13.1,'Mar','#cccccc'],
-     [16.3,'Apr','#333333'],
-     [14.5,'May','#666666']);
- 	*/
-	//alert(m_YearSet[0]);
-	
- 	var results = _getResultsByYearRange(startYear, endYear, interval);// [4,8,181];//
- 	var labels = _getHistogramLabels(startYear, endYear, interval);//['a','b','a'];//
- 	//alert(_getResultsByYearRange(startYear, endYear, interval).toString());
- 	//alert(_getHistogramLabels(startYear, endYear, interval).toString());
- 	//alert(m_YearSet.toString());
- 	var format = new Array();
- 	for ( var idx = 0; idx < results.length; idx++) {
-		var tempArray = new Array(
-			     [results[idx], labels[idx], '#0000FF']);
-		
-		format.push(tempArray[0]);
-	}
- 	
-//	$.jqplot('histogram-container', [results], {
-//	    seriesDefaults: {
-//	        renderer:$.jqplot.BarRenderer,
-//	        pointLabels: { show: true }
-//	    },
-//	    axes: {
-//	        xaxis: {
-//	            renderer: $.jqplot.CategoryAxisRenderer,
-//	            ticks: labels
-//	        }
-//	    }
-//	});
-   $('#histogram-container').jqBarGraph({ data: format });
-	  _showPane(_selById(HIST_VIEW));
+// 	var format =																																 new Array();
+// 	for ( var idx = 0; idx < results.length; idx++) {
+//		var tempArray = new Array(
+//			     [results[idx], labels[idx], '#0000FF']);
+//		
+//		format.push(tempArray[0]);
+//	}
+	_drawChart();
+ 	_showPane(_selById(HIST_VIEW));
   }
 }
 
+function _toggleChart() {
+    /*if (m_chartType == HISTOGRAM_TOGGLED) {
+    	m_chartType = PIE_TOGGLED;
+	} else {
+		m_chartType = HISTOGRAM_TOGGLED;
+	}*/
+    m_chartType = (m_chartType + 1) % 2;
+    _drawChart();
+}
+
+function _drawChart() {
+	
+	$("#chart-container").empty();
+
+	var startYear =  parseInt(document.getElementById('year-start').value);
+ 	var endYear   =  parseInt(document.getElementById('year-end').value);
+ 	var interval  =	 parseInt(document.getElementById('interval-input').value);
+ 	
+	if (startYear < 1800 || endYear > 2000 || endYear < startYear 
+		|| startYear == ' ' || endYear == ' ' || startYear == null || endYear == null) {
+		alert('Invalid date input! please limit your dates from 1800 to 2000');
+		startYear = 1860;
+		endYear   = 1980;
+	}
+ 	var results = _getResultsByYearRange(startYear, endYear, interval);
+ 	var labels = _getHistogramLabels(startYear, endYear, interval);
+ 	
+	setTimeout(function(){
+	 	$(document).ready(function(){
+	        $.jqplot.config.enablePlugins = true;
+	      
+	        var renderer;
+	        if (m_chartType == HISTOGRAM_TOGGLED) {
+	        	renderer = $.jqplot.BarRenderer;
+			} else {
+				renderer = $.jqplot.PieRenderer;
+			}
+	     
+	        plot1 = $.jqplot('chart-container', [results], {
+	            // Only animate if we're not using excanvas (not in IE 7 or IE 8)..
+	            animate: !$.jqplot.use_excanvas,
+	            seriesDefaults:{
+	                renderer:renderer,
+	                pointLabels: { show: true }
+	            },
+	            axes: {
+	                xaxis: {
+	                    renderer: $.jqplot.CategoryAxisRenderer,
+	                    ticks: labels
+	                }
+	            },
+	            highlighter:{
+	                show:false
+	            },
+	            cursor: {
+	                  show: true
+	            }
+	        });
+	        $('#chart-container').bind('jqplotDataHighlight', 
+	                function (ev, seriesIndex, pointIndex, data ) {
+	                    var mouseX = ev.pageX; //these are going to be how jquery knows where to put the div that will be our tooltip
+	                    var mouseY = ev.pageY;
+	                    $('#chartpseudotooltip').html(labels[pointIndex]);
+	                    var cssObj = {
+	                          'position' : 'absolute',
+	                          'left' : mouseX - 40 + 'px', //usually needs more offset here
+	                          'top' : mouseY + 'px'
+	                        };
+	                    $('#chartpseudotooltip').css(cssObj);
+	                    }
+	          );  
+	        $('#chart-container').bind('jqplotDataUnhighlight', 
+	                function (ev) {
+	                    $('#chartpseudotooltip').html('');
+	                }
+	            );
+
+	        $('.jqplot-xaxis').css('display', 'none');
+	    });
+	}, 500); 
+}
 
 function _getResultsByYearRange (start, end, interval) 
 {
@@ -690,7 +740,11 @@ function _getHistogramLabels (start, end, interval) {
 	// Init array to the length of numbethrOfElements
 	var results = new Array();
 	for ( var index = 0; index < numberOfElements; index++) {
-		results.push((start + index * interval).toString() + "+");
+		if (interval > 5) {
+			results.push((start + (index * interval)).toString() + " - " + (start + ((index + 1) * interval)).toString());
+		} else {
+			results.push((start + index * interval).toString());
+		}
 	}
 	return results;
 }
