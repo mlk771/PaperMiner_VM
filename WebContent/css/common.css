@@ -174,7 +174,8 @@ h4.help-h4 { margin-bottom:0px; }
 *#help-pm h2 { margin-bottom:2px; }
 *#help-pm p { margin-top:6px; }
 *.indent p { margin-top:4px; margin-bottom:8px; }
-  
+
+
 hr.pm-button-sep { margin-bottom:0; }
 
 p { margin-bottom: 18px; }
@@ -197,6 +198,7 @@ li {
  -moz-border-radius:8px;
  -moz-box-shadow:5px 5px 12px #777;
 }
+#pie-heading { display:none; } 
 
 /* TOP LEVEL */
 ul.dropdown              { list-style: none; position: relative; padding: 0 0; margin-bottom: 0;}

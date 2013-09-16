@@ -1,23 +1,28 @@
-<h3>Histogram</h3>
-</br>
-</br>
-<div id="chart-container" style="width:1000px; height:400px;">
+<div id="histogram-heading">
+	<h3>Histogram</h3>
+</div>
+<div id="pie-heading">
+	<h3>Pie-Graph</h3>
+</div>
+
+<div id="chart-container" style="width:850px; height:450px;">
 	
 </div>
 <div id="chartpseudotooltip"></div>
+</br>
 <table>
 	<tr>
-	<td>
-	<button id ="toggle-charts-button" onclick="_toggleChart()">Toggle chart</button>
-	</td>
 		<td>
-		Interval:
+		<button id ="toggle-charts-button" onclick="_toggleChart()">Toggle chart</button>
+		</td>
+		<td>
+			Interval:
 		</td>
 		<td>
 			<input id="interval-input" type="textbox" size="4" maxlength="3" value="10">
 		</td>
 		<td>
-		Year From:
+			Year From:
 		</td>
 		<td>
 			<input id="year-start" type="textbox" size="4" maxlength="4" value="1860">
@@ -25,11 +30,11 @@
 			<input id="year-end" type="textbox" size="4" maxlength="4" value="1980">
 			<button id="histo-button">Refresh</button>
 		</td>
-		
 	</tr>
 </table>
 
 <script type="text/javascript">
+
  	$("#histo-button").click(function () {
     	$("#chart-container").empty();
     	showHistogram(true);

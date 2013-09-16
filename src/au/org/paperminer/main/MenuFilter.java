@@ -67,7 +67,7 @@ public class MenuFilter implements Filter
          "<li><a onClick=\"#\">View</a>" +
            "<ul class=\"sub-menu\">" +
            "<li class=\"%s\">%sMap%s</li>" +
-           "<li class=\"%s\">%sHistogram%s</li>" +
+           "<li class=\"%s\">%sHistogram & Pie-Graph%s</li>" +
            "<li class=\"%s\">%sTerm Cloud%s</li>" +
            "<li class=\"%s\">%sRaw Results%s</li>" +
           "</ul>" +

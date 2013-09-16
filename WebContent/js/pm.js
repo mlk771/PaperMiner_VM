@@ -198,7 +198,18 @@ var FADE_TD1         = 200;
 var FADE_TD2         = 350;
 var PREP_SAVE_QUERY  = 'prep';
 var HISTOGRAM_TOGGLED = 0;
-var PIE_TOGGLED	  =     1; 
+var PIE_TOGGLED	  =     1;
+var AU_ACT		=	0;
+var AU_NSW		=	1;
+var AU_NT		=	2;
+var AU_Qld		=	3;
+var AU_SA		=	4;
+var AU_Tas		=	5;
+var AU_Vic		=	6;
+var AU_WA		=	7;
+var OTHER_SOURCE =  8;
+var NUMBER_OF_STATES = 9;
+
 // State variables
 var m_run            = false;
 var m_paused         = false;
@@ -238,6 +249,7 @@ var m_latPostcode = 0.0;
 var m_lngPostcode = 0.0;
 var m_text = '';
 var m_YearSet		= null;
+var m_listOfStates  = null;
 var m_newspaperTitles = [];
 var m_chartType		 = HISTOGRAM_TOGGLED;
 
@@ -620,15 +632,16 @@ function showHistogram (show)
 }
 
 function _toggleChart() {
-    /*if (m_chartType == HISTOGRAM_TOGGLED) {
-    	m_chartType = PIE_TOGGLED;
-	} else {
-		m_chartType = HISTOGRAM_TOGGLED;
-	}*/
+	// either 1 or 0
     m_chartType = (m_chartType + 1) % 2;
     _drawChart();
+	$("#pie-heading").toggle();
+	$("#histogram-heading").toggle();
 }
 
+/**
+ * Draw the both charts in the Histogram page
+ */
 function _drawChart() {
 	
 	$("#chart-container").empty();
@@ -636,87 +649,125 @@ function _drawChart() {
 	var startYear =  parseInt(document.getElementById('year-start').value);
  	var endYear   =  parseInt(document.getElementById('year-end').value);
  	var interval  =	 parseInt(document.getElementById('interval-input').value);
- 	
+ 	var chartTitle = '';
+ 	var xAxisLabel = '';
+    var chartContainerWidth = document.getElementById("chart-container");
+ 	if (interval <= 5) chartContainerWidth.style.width = "1200px";
+ 	else  chartContainerWidth.style.width = "850px";
 	if (startYear < 1800 || endYear > 2000 || endYear < startYear 
 		|| startYear == ' ' || endYear == ' ' || startYear == null || endYear == null) {
 		alert('Invalid date input! please limit your dates from 1800 to 2000');
 		startYear = 1860;
 		endYear   = 1980;
 	}
- 	var results = _getResultsByYearRange(startYear, endYear, interval);
+ 	var results = [];
  	var labels = _getHistogramLabels(startYear, endYear, interval);
+ 	if (m_chartType == PIE_TOGGLED) {
+ 	 	results = _getResultsByStates();
+ 	 	chartTitle = '% of Publications by AUS States';
+ 	} else if (m_chartType == HISTOGRAM_TOGGLED) {
+ 		results = _getResultsByYearRange(startYear, endYear, interval);
+ 	 	chartTitle = '# of Publication Hits per Interval';
+ 	 	xAxisLabel = 'Years';
+ 	}
  	
-	setTimeout(function(){
-	 	$(document).ready(function(){
-	        $.jqplot.config.enablePlugins = true;
-	      
-	        var renderer;
-	        if (m_chartType == HISTOGRAM_TOGGLED) {
-	        	renderer = $.jqplot.BarRenderer;
-			} else {
-				renderer = $.jqplot.PieRenderer;
-			}
-	     
-	        plot1 = $.jqplot('chart-container', [results], {
-	            // Only animate if we're not using excanvas (not in IE 7 or IE 8)..
-	            animate: !$.jqplot.use_excanvas,
-	            seriesDefaults:{
-	                renderer:renderer,
-	                pointLabels: { show: true }
-	            },
-	            axes: {
-	                xaxis: {
-	                    renderer: $.jqplot.CategoryAxisRenderer,
-	                    ticks: labels
-	                }
-	            },
-	            highlighter:{
-	                show:false
-	            },
-	            cursor: {
-	                  show: true
-	            }
-	        });
-	        $('#chart-container').bind('jqplotDataHighlight', 
-	                function (ev, seriesIndex, pointIndex, data ) {
-	                    var mouseX = ev.pageX; //these are going to be how jquery knows where to put the div that will be our tooltip
-	                    var mouseY = ev.pageY;
-	                    $('#chartpseudotooltip').html(labels[pointIndex]);
-	                    var cssObj = {
-	                          'position' : 'absolute',
-	                          'left' : mouseX - 40 + 'px', //usually needs more offset here
-	                          'top' : mouseY + 'px'
-	                        };
-	                    $('#chartpseudotooltip').css(cssObj);
-	                    }
-	          );  
+ 	setTimeout(function(){
+ 		$(document).ready(function(){
+        $.jqplot.config.enablePlugins = true;
+
+        var renderer;
+        if (m_chartType == HISTOGRAM_TOGGLED) {
+        	renderer = $.jqplot.BarRenderer;
+		} else {
+			renderer = $.jqplot.PieRenderer;
+		}
+
+        plot1 = $.jqplot('chart-container', [results], {
+            // Only animate if we're not using excanvas (not in IE 7 or IE 8)..
+            animate: !$.jqplot.use_excanvas,
+            title: {
+            	text: chartTitle,
+            	color: '#000000'
+            },
+            seriesDefaults:{
+                renderer:renderer,
+                pointLabels: { show: true },
+                rendererOptions: {
+                    // Put data labels on the pie slices.
+                    // By default, labels show the percentage of the slice.
+                    showDataLabels: true
+                  }
+            },
+            axes: {
+                xaxis: {
+                    renderer: $.jqplot.CategoryAxisRenderer,
+                    ticks: labels,
+                    showTicks: false,
+                	label: xAxisLabel,
+                	labelOptions:{
+                        fontFamily:'Arial',
+                        fontSize: '16pt',
+                        color: '#000000'
+                      }
+                }
+            },
+            highlighter:{
+                show:false
+            },
+            cursor: {
+                  show: true
+            },
+            series:[
+                    {label:'Number of Hits'}
+            ],
+            legend: { 
+            	show:true,
+            	location: 'e', 
+                placement: 'outside'
+            }
+        });
+        $('#chart-container').bind('resize', function(event, ui) {
+            plot1.replot( { resetAxes: true } );
+        });
+        $('#chart-container').bind('jqplotDataHighlight', 
+                function (ev, seriesIndex, pointIndex, data ) {
+                    var mouseX = ev.pageX; //these are going to be how jquery knows where to put the div that will be our tooltip
+                    var mouseY = ev.pageY;
+                    $('#chartpseudotooltip').html(labels[pointIndex]);
+                    var cssObj = {
+                          'position' : 'absolute',
+                          'left' : mouseX - 40 + 'px', //usually needs more offset here
+                          'top' : mouseY + 'px'
+                        };
+                    $('#chartpseudotooltip').css(cssObj);
+                    }
+          );  
 	        $('#chart-container').bind('jqplotDataUnhighlight', 
 	                function (ev) {
 	                    $('#chartpseudotooltip').html('');
 	                }
 	            );
-
-	        $('.jqplot-xaxis').css('display', 'none');
+	        //$('.jqplot-xaxis').css('display', 'none');
 	    });
-	}, 500); 
+ 	}, 500); 
 }
 
 function _getResultsByYearRange (start, end, interval) 
 {
 	var numberOfElements = Math.ceil((end - start) /  interval);
-	
+																																																															
 	// Init array to the length of numbethrOfElements
 	var results = new Array();
 	for ( var index = 0; index < numberOfElements; index++) {
 		results.push(0);
 		//alert(index.toString());
 	}
-	//alert(results.toString());
+	//alert(results.toString());																															
 	// Tally up data to results array
 	var index;
 	var year;
 	for ( var idx = 0; idx < m_YearSet.length; idx++) {
-		
+
 	//for ( result in m_resultSet) {
 		var zoneInfo = ZONE_NEWSPAPER;//_getZoneInfo(result.zone);
 		if (zoneInfo.dtag.length > 0) {
@@ -734,17 +785,86 @@ function _getResultsByYearRange (start, end, interval)
 	return results;
 }
 
-function _getHistogramLabels (start, end, interval) {
-	var numberOfElements = Math.ceil((end - start) /  interval);
+/**
+ * 
+ * Get the results by states so that we can build up our Pie slices for each state
+ * @param start
+ * @param end
+ * @param interval
+ * @returns {Array}
+ */
+function _getResultsByStates () 
+{
+	var numberOfElements = NUMBER_OF_STATES;
 	
 	// Init array to the length of numbethrOfElements
-	var results = new Array();
+	var state_count = new Array();
 	for ( var index = 0; index < numberOfElements; index++) {
-		if (interval > 5) {
-			results.push((start + (index * interval)).toString() + " - " + (start + ((index + 1) * interval)).toString());
+		state_count.push(0);
+	}
+
+	// Tally up data to state_count array
+	for ( var idx = 0; idx < m_listOfStates.length; idx++) 
+	{
+		if (m_listOfStates[idx].contains('ACT')) {
+			state_count[AU_ACT]++;
+		} else if (m_listOfStates[idx].contains('NSW')) {
+			state_count[AU_NSW]++;
+		} else if (m_listOfStates[idx].contains('NT')) {
+			state_count[AU_NT]++;
+		} else if (m_listOfStates[idx].contains('Qld')) {
+			state_count[AU_Qld]++;
+		} else if (m_listOfStates[idx].contains('SA')) {
+			state_count[AU_SA]++;
+		} else if (m_listOfStates[idx].contains('Tas')) {
+			state_count[AU_Tas]++;
+		} else if (m_listOfStates[idx].contains('Vic')) {
+			state_count[AU_Vic]++;
+		} else if (m_listOfStates[idx].contains('WA')) {
+			state_count[AU_WA]++;
 		} else {
-			results.push((start + index * interval).toString());
-		}
+			state_count[OTHER_SOURCE]++;
+		};
+	}
+
+	var data  = new Array();
+		data  = [['ACT', parseInt(state_count[AU_ACT])],
+	            ['NSW', state_count[AU_NSW]], 
+	            ['NT', state_count[AU_NT]], 
+	            ['Qld', state_count[AU_Qld]],
+	            ['SA', state_count[AU_SA]], 
+	            ['Tas', state_count[AU_Tas]], 
+	            ['Vic', state_count[AU_Vic]], 
+	            ['WA', state_count[AU_WA]],
+	            ['Other', state_count[OTHER_SOURCE]]];
+	return data;
+}
+
+
+function _getHistogramLabels (start, end, interval) 
+{
+	var numberOfElements = 0;
+	var results = new Array();
+
+	if (m_chartType == PIE_TOGGLED) 
+	{
+		results.push('ACT');
+		results.push('NSW');
+		results.push('NT');
+		results.push('Qld');
+		results.push('SA');
+		results.push('Tas');
+		results.push('Vic');
+		results.push('WA');
+	} else {
+		numberOfElements = Math.ceil((end - start) /  interval);
+		for ( var index = 0; index < numberOfElements; index++) {
+			if (interval > 5) {
+				results.push((start + (index * interval)).toString() + " - " + (start + ((index + 1) * interval)).toString());
+			} else {
+				results.push((start + index * interval).toString());
+			}
+		}		
 	}
 	return results;
 }
@@ -906,7 +1026,10 @@ function refreshRecord ()
   }
 }
 
-
+/**
+ * 
+ * Get the full newpaper Titles from Trove 
+ */
 function getFullnewspaperTitles ()
 {
   //http://api.trove.nla.gov.au/newspaper/titles?key=<INSERT KEY>
@@ -1051,160 +1174,6 @@ function _postcodeMap ()
 	} else { _resetMap(); } // Zoom-out to Australia level with empty input
  /* */
 }
-
-//function _getLatLangFromPostCode ()
-//{
-//	var geocoder= new google.maps.Geocoder();
-//	var address = document.getElementById('qPostcode').value;
-//	if (address != "") {
-//		address += " australia";		
-//		geocoder.geocode( { 'address': address}, function(results, status) {
-//	      if (status == google.maps.GeocoderStatus.OK) {
-//	    	_latLngToFloats(results[0].geometry.location);
-//	    	alert(m_latPostcode.toString() + "~~ " + m_lngPostcode.toString());
-//	    	_findLatLongLocation(0);
-//	    	alert(m_latPostcode.toString() + ", " + m_lngPostcode.toString());
-//	      } else {
-//	        alert("Geocode was not successful for the following reason: " + status);
-//	      }
-//	    });
-//	}
-//}
-/**
- * extracrt Lat & Long and assign them to floats
- * 
- * @param latlng
- */
-//function _latLngToFloats (latlng) {
-//	var llString = latlng.toString();
-//	var llArray = llString.split(",");
-//	m_latPostcode = parseFloat(llArray[0].substring(1, llArray[0].length -1));
-//	m_lngPostcode = parseFloat(llArray[1].substring(1, llArray[1].length - 2));
-//}
-
-//function _findLatLongLocation (src)
-//{
-//	// FIXME: clean up some stuff here 
-//	//alert("HERE!");
-//	var __getLatLongs = function(list, tag) {
-//		var res = { lat:'', lng:'' };
-//	    for (var i = 0; i < list.length; i++) {
-//	      for (var j = 0; j < list[i].types.length; j++) {
-//	        if (list[i].types[j] === tag) {
-//	          res.lat = list[i].location;
-//	          res.lngn = list[i].location;
-//	          alert(list[i].types[j]);
-//	          break;
-//	        }
-//	      }
-//	    }
-//	    return res;
-//	  };
-//	  
-//	  var lat = m_latPostcode;
-//	  var lng = m_lngPostcode;
-//	  alert(lat + ", " + lng);
-//	  if (src == 0) {
-//		var uri = PM_URI + '/loc/ltln?lat=' + lat.toString() + '&lng=' + lng.toString();
-//		$.getJSON(uri, function (data, status, jqXHR) {
-//		  if (status == "success") {
-//		    if (data.length === 0) {
-//		      _popupDialog(INFO, 'Lat & Long are not in the Paper Miner database.');
-//		      return;
-//		    }
-//		    for (var i = 0; i < data.length; i++) {
-//		      m_locnSelections.push(data[i]);
-//		    }
-//		    var locationResults = m_locnSelections[0];
-//		    alert(locationResults.lat + ", test " + locationResults.lng);
-//		    //_formatLocationSelections();
-//		  }
-//		});
-//	  }
-//	  else {
-//	    var uri = GOOGLE_MAPS_URL + ln + 
-//	    (sn.length > 0 ? '+' + sn : '') +
-//	    (cn.length > 0 ? '+' + sn : '') +
-//	    '&sensor=false';
-//	    $.getJSON(uri, function (data, status, jqXHR) {
-//	      if (status == "success") {
-//	        if ( data.results.length === 0) {
-//	          _popupDialog(INFO, 'No results from Google Maps for this Location.');
-//	          return;
-//	        }
-//	        try {
-//	          var list = new Array();
-//	          for (var i = 0; i < data.results.length; i++) {
-//	            var obj = data.results[i];
-//	            var state = __getLatLongs(obj.address_components, 'administrative_area_level_1');
-//	            var cntry = __getLatLongs(obj.address_components, 'country');
-//	            var tmp = {
-//	                id: "0",
-//	                state_sn: state.sn,
-//	                state_ln: state.ln,
-//	                iso_sn: cntry.sn,
-//	                iso_ln: cntry.ln,
-//	                name: obj.address_components[0].long_name,
-//	                latitude: obj.geometry.location.lat,
-//	                longitude: obj.geometry.location.lng,
-//	                box_nw_lat: obj.geometry.bounds.northeast.lat,
-//	                box_nw_lng: obj.geometry.bounds.northeast.lng,
-//	                box_se_lat: obj.geometry.bounds.southwest.lat,
-//	                box_se_lng: obj.geometry.bounds.southwest.lng,
-//	            };
-//	            list.push(tmp);
-//	          }
-//	          m_locnSelections = m_locnSelections.concat(list);
-//	        }
-//	        catch (ex) {
-//	          _popupDialog(ALERT, "The results are ambiguous. Please try specifying a state, and/or Country.");
-//	        }
-//	      }
-//	      _formatLocationSelections();
-//	    });
-//	  }
-//}
-
-/*function _limitSearchByPostcod(pos) 
-{
-	var geocoder = new google.maps.Geocoder();
-	var postcode;
-    var latlng = pos;
-    geocoder.geocode({'latLng': latlng}, function(results, status) {
-        if (status == google.maps.GeocoderStatus.OK) {
-        	console.log(results);
-        	if (results[1]) {
-        		var indice=0;
-        		for (var j=0; j<results.length; j++)
-        		{
-        			if (results[j].types[0]=='locality')
-        			{
-        				indice=j;
-        				break;
-        			}
-        		}
-        	alert('The good number is: '+j);
-        	console.log(results[j]);
-        	for (var i=0; i<results[j].address_components.length; i++)
-        	{
-        		if (results[j].address_components[i].types[0] == "postal_code") {
-        			//this is the object you are looking for
-        			postcode = results[j].address_components[i];
-        		}
-        	}
-        	m_pos += postcode.short_name + ' ';
-        	//city data
-        	//alert(city.long_name + " || " + region.long_name + " || " + country.short_name)
-        	} else {
-        		alert("No results found");
-        	}
-        } else {
-        	alert("Geocoder failed due to: " + status);
-        }
-    });	
-}
-*/
-
 
 
 /**
@@ -1452,6 +1421,7 @@ function _resetState ()
   m_trefIndex = new Array();
   m_resultSet = new Array();
   m_YearSet  = new Array();
+  m_listOfStates = new Array();
   m_yearCount = new Array();
   m_locations = new Array();
   m_rawDateIndex = new Array();
@@ -1579,9 +1549,11 @@ function _processData (data, pos, id)
         m_run = false;
         ++m_queryId;
       }
-      m_YearSet = new Array();
+      m_YearSet 	 = new Array();
+      m_listOfStates = new Array();
       for ( var index = 0; index < m_resultSet.length; index++) {
     	  m_YearSet.push(m_resultSet[index].data.date.toString().split("-")[0]); 
+    	  m_listOfStates.push(m_resultSet[index].data.title.value.toString());
 	}
      // alert(m_resultSet[0].data.date.toString().split("-")[0]);
      // alert(m_YearSet[0].toString());
