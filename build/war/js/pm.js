@@ -776,7 +776,7 @@ function _getResultsByYearRange (start, end, interval)
 		    year = date;
 		    //alert(year.toString());
 			index = Math.floor(((year - start) / interval));//year - (year % interval);
-			if(index < results.length && index > 0) {
+			if(index < results.length && index >= 0) {
 				results[index]++;
 			}
 		}
