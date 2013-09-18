@@ -72,7 +72,12 @@
       <include name="commons-dbcp-1.4.jar"/>
       <include name="json_simple-1.1.jar"/>
       <!-- junit libraries  -->
-      <include name="junit.jar" />
+      <include name="junit-dep-4.11.jar" />
+      <include name="hamcrest-library-1.3.jar" />
+      <include name="hamcrest-core-1.3.jar" />
+	  <include name="selenium-java-2.35.0.jar" />
+	  <include name="selenium-java-2.35.0-srcs.jar" />
+                        
     </fileset>
   </path>
 
@@ -249,14 +254,13 @@
       srcdir="${src.dir}"
       destdir="${build}"
       deprecation="true"
-      target="5"
+      target="7"
       includeantruntime="false"
       classpathref="build.classes">
       <classpath>
         <pathelement path="${tomcat-lib-dir}/servlet-api.jar"/>
       </classpath>
       <exclude name="**/util/*" />
-   	  <exclude name="**/tests/*"/>
     </javac>
   </target>
   
@@ -267,7 +271,7 @@
       srcdir="${src.dir}"
       destdir="${build}"
       deprecation="true"
-      target="5"
+      target="7"
       includeantruntime="false"
       classpathref="build.classes">
       <exclude name="**/db/*" />
