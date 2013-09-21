@@ -29,6 +29,20 @@
  
  <p>&nbsp;
  <div id="raw-rb-pane" align="center">
+ 
+ <table>
+	<tr>
+		<td>
+			Year From:
+		</td>
+		<td>
+			<input id="rawview-year-start" type="textbox" size="4" maxlength="4" onblur="updateDateRange()">
+			<span>   to:</span>
+			<input id="rawview-year-end" type="textbox" size="4" maxlength="4" onblur="updateDateRange()">
+		</td>
+	</tr>
+</table>
+</br>
   <input type="checkbox" id="raw-select-cb" onChange="_sortRaw(0)"> Restrict records to Map View Timeline marker range </input>
   <p>Order by:
   <input type="radio" name="raw-sort-rb" value="date" onChange="_sortRaw(1)"> Date </input>
@@ -42,3 +56,28 @@
  
 </div>
  
+ 
+ <script type="text/javascript">
+
+ 	$(document).ready(function () {
+		var span = $('#y2k-slider').val().split(';');
+	  	$('#rawview-year-start').val(span[0]);
+		  $('#rawview-year-end').val(span[1]);
+		  //alert(span.toString());
+	});	
+ 
+ 
+function updateDateRange () {
+	
+	var start = parseInt($('#rawview-year-start').val());
+	var end = parseInt($('#rawview-year-end').val());
+	//alert(start.toString() + end.toString());
+	if (start >= 1800 && end <= 2000 && start <= end)
+	{
+//		$('#y2k-slider').val(start.toString() + ';' + end.toString());
+		$( "#y2k-slider" ).slider("value", start.toString() + ';' + end.toString());
+	//var span = $('#y2k-slider').val().split(';');
+		 // alert($('#y2k-slider').val().split(';').toString());
+	}
+}
+</script>

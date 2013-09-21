@@ -197,6 +197,8 @@ var USER_VALIDATED   =   2;
 var FADE_TD1         = 200;
 var FADE_TD2         = 350;
 var PREP_SAVE_QUERY  = 'prep';
+
+// Histogram & Pie-graph Global Values
 var HISTOGRAM_TOGGLED = 0;
 var PIE_TOGGLED	  =     1;
 var AU_ACT		=	0;
@@ -209,6 +211,9 @@ var AU_Vic		=	6;
 var AU_WA		=	7;
 var OTHER_SOURCE =  8;
 var NUMBER_OF_STATES = 9;
+var m_chartType		 = HISTOGRAM_TOGGLED;
+
+
 
 // State variables
 var m_run            = false;
@@ -251,7 +256,7 @@ var m_text = '';
 var m_YearSet		= null;
 var m_listOfStates  = null;
 var m_newspaperTitles = [];
-var m_chartType		 = HISTOGRAM_TOGGLED;
+var m_filteredResultSet = []; 
 
 
 /**
@@ -760,9 +765,8 @@ function _getResultsByYearRange (start, end, interval)
 	var results = new Array();
 	for ( var index = 0; index < numberOfElements; index++) {
 		results.push(0);
-		//alert(index.toString());
 	}
-	//alert(results.toString());																															
+																													
 	// Tally up data to results array
 	var index;
 	var year;
@@ -774,7 +778,6 @@ function _getResultsByYearRange (start, end, interval)
 		    //var date = eval('m_resultSet[idx].data.' + zoneInfo.dtag);
 		    var date = parseInt(m_YearSet[idx]);
 		    year = date;
-		    //alert(year.toString());
 			index = Math.floor(((year - start) / interval));//year - (year % interval);
 			if(index < results.length && index >= 0) {
 				results[index]++;
@@ -1428,6 +1431,7 @@ function _resetState ()
   m_locationsCache = new Array();
   m_currentQuery = _createQueryString(); 
   m_newspaperTitles = new Array();
+  m_filteredResultSet = new Array();
   $('div#raw-list-container').html('');
   $('div#raw-record-container').html('');
   $('#ctl-table button').button('disable');   
@@ -1646,6 +1650,7 @@ function _createPane (id, callback, cssName)
  */
 function _isInTimelineRange(idx)
 {
+
   var inRange = false;
   var span = $(_selById(Y2K_SLIDER)).slider('value').split(';');
   var ystart = parseInt(span[0]);
@@ -2342,6 +2347,9 @@ function _updateLocationsListDisplay (id)
  */
 function _sortRaw (sortType)
 {
+	//m_filteredResultSet
+	
+	
   var isInRange = function (idx) {
     var inRange = true;
     if (m_restrictRawList) {
