@@ -35,8 +35,19 @@
 
 <script type="text/javascript">
 
- 	$("#histo-button").click(function () {
-    	$("#chart-container").empty();
-    	showHistogram(true);
-	});	
+$(document).ready(function () {
+	_updateViews();
+});
+
+$("#histo-button").click(function () {
+	
+	var start = parseInt($('#year-start').val());
+	var end = parseInt($('#year-end').val());
+	
+	_updateSlider(start, end);
+
+	$("#chart-container").empty();
+	showHistogram(true);
+});
+
 </script>

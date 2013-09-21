@@ -226,7 +226,6 @@ var m_user           = null;
 var m_locnSelections = null;
 var m_queryId        =  0;
 var m_rawRecordId    = -1;
-var m_restrictRawList      = false;
 var m_currentSaveFormPane  = Q_SAVE;
 var m_currentQueryFormPane = Q_SIMPLE;
 var m_currentPaneSelector  = _selById(MAP_VIEW);
@@ -256,8 +255,6 @@ var m_text = '';
 var m_YearSet		= null;
 var m_listOfStates  = null;
 var m_newspaperTitles = [];
-var m_filteredResultSet = []; 
-
 
 /**
  * Invoked by index page onload trigger, does any required configuration.
@@ -623,7 +620,7 @@ function showHistogram (show)
   }
   if(show)
   {
-
+	  _updateViews();
 // 	var format =																																 new Array();
 // 	for ( var idx = 0; idx < results.length; idx++) {
 //		var tempArray = new Array(
@@ -894,6 +891,8 @@ function showRawResults (show)
     _createPane(RAW_VIEW, callback, null);
   }
   if (show) {
+   _updateViews();
+   
    if (m_text != ''){
 	   _sortRaw(3); 
    } else { _sortRaw(4);}
@@ -1431,7 +1430,6 @@ function _resetState ()
   m_locationsCache = new Array();
   m_currentQuery = _createQueryString(); 
   m_newspaperTitles = new Array();
-  m_filteredResultSet = new Array();
   $('div#raw-list-container').html('');
   $('div#raw-record-container').html('');
   $('#ctl-table button').button('disable');   
@@ -1687,6 +1685,36 @@ function _initSlider ()
     dimension: '', 
     callback: function( value ){ toggleMapMarkers(); } 
   });  
+}
+
+function _updateSlider (start, end) {
+	
+	if (start >= 1800 && end <= 2000 && start <= end)
+	{
+		// create the html for the slider
+		$('#y2k-timespan').empty();
+		
+		$('#y2k-timespan').html('<input id="y2k-slider" value="' +
+			start.toString() + ';' + end.toString() + '" ></input>');
+		
+		_initSlider();
+		
+		// update map markers
+		toggleMapMarkers();
+	}
+}
+
+/**
+ * For updating the date text boxes.
+ */
+function _updateViews() {
+	
+	// update text boxes
+	var span = $('#y2k-slider').val().split(';');
+	$('#year-start').val(span[0]);
+	$('#year-end').val(span[1]);
+	$('#rawview-year-start').val(span[0]);
+	$('#rawview-year-end').val(span[1]);
 }
 
 /**
@@ -2347,23 +2375,15 @@ function _updateLocationsListDisplay (id)
  */
 function _sortRaw (sortType)
 {
-	//m_filteredResultSet
-	
-	
   var isInRange = function (idx) {
     var inRange = true;
-    if (m_restrictRawList) {
-      inRange = _isInTimelineRange(idx);
-    }
+    inRange = _isInTimelineRange(idx);
     return inRange;
   };
   
   var tmp = new Array();
   try {
     switch (sortType) {
-    case 0:
-      m_restrictRawList = $('input#raw-select-cb').is(':checked');
-      break;
     case 1:
     case 4:
       for (var i = 0, j = 0; i < m_resultSet.length; ++i) {
