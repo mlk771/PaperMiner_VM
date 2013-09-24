@@ -2242,8 +2242,11 @@ function _displayRawDataItem (id)
 			      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
 			    }
 			    else if (zoneInfo.tags[i].isLink) {
-			      html += '<tr class="hidden"><td>' + zoneInfo.tags[i].title + ':</td><td>' +
-			      '<a id="raw-trove-link" href="' + value + '" target="_blank">' + value + '</a></td></tr>';
+			      html += '<tr class=""><td>' + zoneInfo.tags[i].title + ':</td><td>' +
+			      '<a id="raw-trove-link" href="' + value + '" target="_blank">' + 'Edit at Trove'
+			      + '</a></br><div style="width: 100px; height: 32px; overflow: hidden; position: relative;"><iframe src="'+ value +'" id="pdf-download-frame"' +
+			      'style="position: absolute; top: -103px; left: -3px;' +
+			      'width: 1000px; height: 1200px;"></iframe></div></td></tr>';
 			    }	
 			    else {
 			      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
@@ -2263,8 +2266,11 @@ function _displayRawDataItem (id)
 			    		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
 			    	}
 			    	else if (zoneInfo.tags[i].isLink) {
-			    		html += '<tr class="hidden"><td>' + zoneInfo.tags[i].title + ':</td><td>' +
-			    		'<a id="raw-trove-link" href="' + value + '" target="_blank">' + value + '</a></td></tr>';
+			    		html += '<tr class=""><td>' + zoneInfo.tags[i].title + ':</td><td>' +
+					      '<a id="raw-trove-link" href="' + value + '" target="_blank">' + 'Edit at Trove'
+					      + '</a></br><div style="width: 100px; height: 32px; overflow: hidden; position: relative;"><iframe src="'+ value +'" id="pdf-download-frame"' +
+					      'style="position: absolute; top: -103px; left: -3px;' +
+					      'width: 1000px; height: 1200px;"></iframe></div></td></tr>';
 			    	}		
 			    	else {
 			    		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
@@ -2724,7 +2730,6 @@ function locnDel ()
     _strikeOutLocations(tmp, m_resultSet[m_rawRecordId].data.id);
   }
 }
-
 
 
 // EOF
