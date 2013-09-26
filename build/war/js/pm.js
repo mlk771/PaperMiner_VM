@@ -2248,10 +2248,11 @@ function _displayRawDataItem (id)
 			      + '</a></br><div style="width: 100px; height: 32px; overflow: hidden; position: relative;"><iframe src="'+ value +'" id="pdf-download-frame"' +
 			      'style="position: absolute; top: -103px; left: -3px;' +
 			      'width: 1000px; height: 1200px;"></iframe></div></td></tr>';*/
-			    	html += '<tr class=""><td>' + zoneInfo.tags[i].title + ':</td><td>' +
-				      '<a id="raw-trove-link" href="' + value + '" target="_blank">' + 'Edit at Trove'
-				      + '</a></br><a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + '">PDF Link</a></div>' +
-				      '</br><a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + '?print=y">Print Link</a></td></tr>';
+			    	html += '<tr class=""><td></td><td>' +
+				      '</a></br><a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
+				      '"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"></a>&nbsp;</div>' +
+				      '<a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + 
+				      '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index"src="images/printIcon.png"</a></td></tr>';
 			    }	
 			    else {
 			      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
@@ -2272,15 +2273,17 @@ function _displayRawDataItem (id)
 			    		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
 			    	}
 			    	else if (zoneInfo.tags[i].isLink) {
-			    		/*html += '<tr class=""><td>' + zoneInfo.tags[i].title + ':</td><td>' +
-					      '<a id="raw-trove-link" href="' + value + '" target="_blank">' + 'Edit at Trove'
-					      + '</a></br><div style="width: 100px; height: 32px; overflow: hidden; position: relative;"><iframe src="'+ value +'" id="pdf-download-frame"' +
-					      'style="position: absolute; top: -103px; left: -3px;' +
-					      'width: 1000px; height: 1200px;"></iframe></div></td></tr>';*/
-			    		html += '<tr class=""><td>' + zoneInfo.tags[i].title + ':</td><td>' +
+			    		//Mike's old format
+			    		/* html += '<tr class=""><td>' + zoneInfo.tags[i].title + ':</td><td>' +
 					      '<a id="raw-trove-link" href="' + value + '" target="_blank">' + 'Edit at Trove'
 					      + '</a></br><a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + '">PDF Link</a></div>' +
 					      '</br><a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + '?print=y">Print Link</a></td></tr>';
+					      */
+				    	html += '<tr class=""><td></td><td>' +
+					      '</a></br><a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
+					      '"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"></a>&nbsp;</div>' +
+					      '<a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + 
+					      '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index"src="images/printIcon.png"</a></td></tr>';
 			    	}		
 			    	else {
 			    		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
