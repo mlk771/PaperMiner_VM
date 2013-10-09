@@ -27,6 +27,7 @@ var ALERT            = 'Alert';
 var INFO             = 'Information';
 var QUESTION         = 'Question';
 var UNDEF            = 'undefined';
+var CITATION		 = 'Citation';
 
 var MAX_FETCH_SIZE   = 100;
 var YEAR_OFFSET      = 44;
@@ -255,6 +256,8 @@ var m_text = '';
 var m_YearSet		= null;
 var m_listOfStates  = null;
 var m_newspaperTitles = [];
+var m_newspaperIDs = [];
+var m_selectedTitleID = "";
 
 /**
  * Invoked by index page onload trigger, does any required configuration.
@@ -495,8 +498,10 @@ function newQuery (show)
       _popupDialog(INFO, 'Please stop the current query before starting another.');
     }
     else {
-      _showPane(_selById(NEW_QUERY_PANE));
-      addOption();
+      _showPane(_selById(NEW_QUERY_PANE));		   	
+      addOptions();
+      m_selectedTitleID = "";
+      getFullnewspaperTitles();
     }
   }
 }
@@ -1046,27 +1051,67 @@ function getFullnewspaperTitles ()
       if (status == "success") {
     	//  alert('success!');
     	  m_newspaperTitles[data.response.records.newspaper.length];
+
         for ( var idx = 0; idx < data.response.records.newspaper.length; idx++) {
         	m_newspaperTitles[idx] = data.response.records.newspaper[idx].title;
+        	m_newspaperIDs[idx] = data.response.records.newspaper[idx].id;
 		}
+        
+        
         //alert(m_newspaperTitles[12].toString());
       }
     });
-    addOption();
+    addOptions();
 }
 
 
-function addOption()
+function addOptions()
 { 
 	//getFullnewspaperTitles();
-	var itemid = document.getElementById('publication-list');	
-	for ( var idx = 0; idx < m_newspaperTitles.length; idx++) {
-		var optn = document.createElement("option");
-		optn.text = m_newspaperTitles[idx];
-		optn.value = idx;
+	//$("#publication-list").empty();
+	/*var itemid = document.getElementById('publication-list');	
+	var optn = document.createElement("option");
+	optn.text = "Select a Publisher";
+	optn.value = 0;
+	itemid.add(optn);
+	
+	for ( var idx = 1; idx < m_newspaperTitles.length + 1; idx++) {
+		optn = document.createElement("option");
+		optn.text = m_newspaperTitles[idx - 1];
+		optn.value = m_newspaperIDs[idx - 1];
 		itemid.add(optn);
-	}
+	}*/
 }
+
+function updatePublisherOptions() {
+	
+	/*$("#publication-list").empty();
+	var itemid = document.getElementById('publication-list');	
+	var optn = document.createElement("option");
+	optn.text = "Select a Publisher";
+	optn.value = 0;
+	itemid.add(optn);
+	
+	for ( var idx = 1; idx < m_newspaperTitles.length + 1; idx++) {
+		optn = document.createElement("option");
+		optn.text = m_newspaperTitles[idx - 1];
+		optn.value = idx;
+		itemid.add(optn);		
+	}*/
+}
+
+
+function SortArrayByKeys(inputarray) {
+	  var arraykeys=[];
+	  for(var k in inputarray) {arraykeys.push(k);}
+	  arraykeys.sort();
+
+	  var outputarray=[];
+	  for(var i=0; i<arraykeys.length; i++) {
+	      outputarray[arraykeys[i]]=inputarray[arraykeys[i]];
+	  }
+	  return outputarray;
+	}
 
 function locnEdit (show)
 {
@@ -1360,14 +1405,19 @@ function _createQueryString ()
 	  if (m_advTerm2 != ''){
 		  m_currentTerm += '%20' + m_booleanOp + '%20' + m_advTerm2;// + '%22';
 		  str = '&zone=' + m_currentZone + 
-	      '&q=' + m_currentTerm;
+	      '&q=' + m_currentTerm +
+	      '&l-title=' + m_selectedTitleID;
 		  //alert(str.toString());
 	  }
 	  else 
 	  {
 		  str = '&zone=' + m_currentZone + 
-	      '&q=' + encodeURIComponent(m_currentTerm);
+	      '&q=' + m_currentTerm +
+	      '&l-title=' + m_selectedTitleID;
 	  }
+	  
+	  
+	  
 	  //alert(str.toString());
     break;
   case Q_CUSTOM:
@@ -1430,6 +1480,7 @@ function _resetState ()
   m_locationsCache = new Array();
   m_currentQuery = _createQueryString(); 
   m_newspaperTitles = new Array();
+  m_newspaperIDs = new Array();
   $('div#raw-list-container').html('');
   $('div#raw-record-container').html('');
   $('#ctl-table button').button('disable');   
@@ -1592,7 +1643,7 @@ function _showPane (id)
  * @param dtype QUESTION, INFO or ALERT
  * @param html formatted content for popup
  */
-function _popupDialog (dtype, html, width)
+function _popupDialog (dtype, html, width) 
 {
   var errOpts = { 
     autoOpen:'true', show:FADE_TD1, hide: FADE_TD1,
@@ -2224,6 +2275,43 @@ function _getZoneInfo (zone)
   return zoneInfo;
 }
 
+function citeWrite(id) {
+	//var MLAcitation;
+	 var rec = m_resultSet[id];
+	 var zoneInfo = _getZoneInfo(rec.zone);
+	 var url = 'http://nla.gov.au/nla.news-article';
+	 var fullURL = url + eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[0].tag);
+	 var date =  eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[1].tag);
+	 var publicationName =  eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[2].tag);
+	 var heading =  eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[4].tag);
+	 var page =  eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[7].tag);
+	 
+	 var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+	 var systemDate = new Date();
+	 var APAdateRetrieved = months[systemDate.getMonth()] + ' ' + systemDate.getDate() + ',' + systemDate.getFullYear();
+	 var MLAdateRetrieved = systemDate.getDate() + ' ' + months[systemDate.getMonth()].substring(0,3) + ' ' + systemDate.getFullYear();
+	 
+	 var APAcitation = '<dt><b>APA citation</b></dt><dd>' + heading + ' (' + date + '). <i>' + publicationName + '</i>, p. ' +
+	 					page + '. Retrieved ' + APAdateRetrieved +' , from ' + fullURL + '</dd>'; 
+	 var MLAcitation = '<dt><b>MLA citation</b></dt><dd>"' + heading + '" <i>' + publicationName + '</i> ' + date + ': ' + 
+	 					page + ' Web. ' + MLAdateRetrieved + ' <' + fullURL + '></dd>'; 
+	 
+	 var html = '<dl><dt><h3>Formatted Referencing Styles:</h3></dt>' + APAcitation + MLAcitation + '</dl>' +
+	 '<a href="" target="_blank"><button><img src="images/endnote-icon.jpg" width="24" height="24">EndNote XML</butto	n></a>' ; 
+	 _popupDialog (CITATION, html, 400);
+	 //alert(MLAcitation.toString());
+}
+
+function export2CSV() {
+    var csv = $('#csv-export').table2CSV({
+        delivery: 'download'
+    });
+    window.open('data:text/csv;charset=UTF-8,' + encodeURIComponent(csv));
+}
+function exportAll2CSV() {
+	var records = m_resultSet;
+}
+
 /**
  * Display info contained in a response
  * @param id Index in result set of record
@@ -2233,6 +2321,7 @@ function _displayRawDataItem (id)
 	  var rec = m_resultSet[id];
 	  var zoneInfo = _getZoneInfo(rec.zone);
 	  var html = '<table id="raw-record"><tr><td class="td-crud-name">Zone:</td><td>' + rec.zone + '</td></tr>';  
+	  var csvContents = '<table id="csv-export"><tr><td>Zone:</td><td>' + rec.zone + '</td></tr>';
 	  switch (m_currentQueryFormPane) {
 	  case Q_SIMPLE : 
 		  for (var i = 0; i < zoneInfo.tags.length; i++) {
@@ -2243,19 +2332,18 @@ function _displayRawDataItem (id)
 			      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
 			    }
 			    else if (zoneInfo.tags[i].isLink) {
-			     /* html += '<tr class=""><td>' + zoneInfo.tags[i].title + ':</td><td>' +
-			      '<a id="raw-trove-link" href="' + value + '" target="_blank">' + 'Edit at Trove'
-			      + '</a></br><div style="width: 100px; height: 32px; overflow: hidden; position: relative;"><iframe src="'+ value +'" id="pdf-download-frame"' +
-			      'style="position: absolute; top: -103px; left: -3px;' +
-			      'width: 1000px; height: 1200px;"></iframe></div></td></tr>';*/
 			    	html += '<tr class=""><td></td><td>' +
-				      '</a></br><a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
-				      '"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"></a>&nbsp;</div>' +
+				      '</a></br><a name="pdf-anchor" target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
+				      '"download="Document"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"/></a>&nbsp;</div>' +
 				      '<a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + 
-				      '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index"src="images/printIcon.png"</a></td></tr>';
+				      '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index" src="images/printIcon.png"/></a><a style="display:none;" id = "raw-trove-link" href="'+value+'">Edit in Trove</a>' +
+				      '&nbsp;<a target="_blank"><img name=cite-write-icon width=32 height=32 border=0 alt="Index" src="images/cite-icon.png" onclick="citeWrite('+id+')"/></a>' +
+				      '&nbsp;<a target="_blank"><img name=csv-icon width=32 height=32 border=0 alt="Index" src="images/csv-icon.png" onclick="export2CSV()"/></a>' +
+				      '<p id="pdf-tooltip">Right-click + save link as... to save the pdf file to your local machine.</p></td></tr>';
 			    }	
 			    else {
 			      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
+			      if (i <= 7) csvContents += '<tr><td>' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
 			    }
 			  }
 		  break;
@@ -2273,20 +2361,18 @@ function _displayRawDataItem (id)
 			    		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
 			    	}
 			    	else if (zoneInfo.tags[i].isLink) {
-			    		//Mike's old format
-			    		/* html += '<tr class=""><td>' + zoneInfo.tags[i].title + ':</td><td>' +
-					      '<a id="raw-trove-link" href="' + value + '" target="_blank">' + 'Edit at Trove'
-					      + '</a></br><a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + '">PDF Link</a></div>' +
-					      '</br><a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + '?print=y">Print Link</a></td></tr>';
-					      */
-				    	html += '<tr class=""><td></td><td>' +
-					      '</a></br><a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
-					      '"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"></a>&nbsp;</div>' +
+			    		html += '<tr class=""><td></td><td>' +
+					      '</a></br><a name="pdf-anchor" target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
+					      '"download="Document"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"/></a>&nbsp;</div>' +
 					      '<a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + 
-					      '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index"src="images/printIcon.png"</a></td></tr>';
+					      '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index" src="images/printIcon.png"/></a><a style="display:none;" id = "raw-trove-link" href="'+value+'">Edit in Trove</a>' +
+					      '&nbsp;<a target="_blank"><img name=cite-write-icon width=32 height=32 border=0 alt="Index" src="images/cite-icon.png" onclick="citeWrite('+id+')"/></a>' +
+					      '&nbsp;<a target="_blank"><img name=csv-icon width=32 height=32 border=0 alt="Index" src="images/csv-icon.png" onclick="export2CSV()"/></a>' +
+					      '<p id="pdf-tooltip">Right-click + save link as... to save the pdf file to your local machine.</p></td></tr>';
 			    	}		
 			    	else {
 			    		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
+			    		if (i <= 7) csvContents += '<tr><td>' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
 			    	}
 		  		}
 			  }
@@ -2303,7 +2389,9 @@ function _displayRawDataItem (id)
 	  }
 	  
 	  html += '</table>';
+	  csvContents += '</table>';
 	  $(_selById(RAW_RECORD)).html(html);
+	  $('div#csv-table-container').html(csvContents);
 	  m_rawRecordId = id;
 	  if (m_currentZone === 'newspaper') {
 	    $('button#rdv-pb1').button('enable');

@@ -48,14 +48,20 @@
   </tr>
   <tr>
    <td class="td-name">Publisher:</td>
-   <td><input id="qPublisher" style="width: 200px" type="text"/></td>
+   <td><input id="qPublisher" style="width: 454px" onchange="updateSelectionPublisher()"/></td>
   </tr>
-  <tr>
-   <td class="td-name">Publication:</td>
-   <td><select id="publication-list">
-   <script type="text/javascript">  window.onload = getFullnewspaperTitles();  </script>
-   </td>
-  </tr>
+  <!-- <tr>
+   <td class="td-name">Search Publisher:</td>
+   <td><select id="publication-list" onchange="updateSelectionPublisher()"> -->
+   <script type="text/javascript">  
+   	setTimeout(function(){
+   	$(document).ready(function () {
+   		getFullnewspaperTitles();
+   	});
+   	}, 500); 
+   </script>
+   <!--</td>
+  </tr> -->
   <tr><td colspan="2"><hr class="pm-button-sep"></td></tr>
   <tr>
    <td></td>
@@ -63,7 +69,7 @@
     <div class="pm-button-bar">
      <button id="nq-pb11" onClick="resetQueryPane()">Clear form</button>
      <button id="nq-pb12" onClick="_doQuery(0)">Execute query</button>
-     <button id="nq-pb13" onClick="addOption()">Get Details</button>
+     <button id="nq-pb13" onClick="addOptions()">Get Details</button>
     </div>
    </td>
   </tr>
@@ -90,3 +96,30 @@
   <tr><td colspan="2"><em>Custom search not yet implemented</em></td></tr>
  </table>
 </div>
+<script>
+function updateSelectionPublisher() {
+	//m_selectedTitleID = m_newspaperIDs[document.getElementById("qPublisher").selectedIndex - 1];
+	
+	var str = document.getElementById("qPublisher").value;
+	//alert(str);
+	for (var i = 0; i < m_newspaperTitles.length; i++) {
+	    //alert(str + " == " + m_newspaperTitles[i]);
+		if (str == m_newspaperTitles[i]) {
+		    //alert("true");
+			m_selectedTitleID = m_newspaperIDs[i];
+			//alert(m_selectedTitleID.toString());
+			break;
+		}
+	}
+	//alert(m_selectedTitleID.toString());
+	
+	// var e = document.getElementById("publication-list");
+	// var strUser = e.options[e.selectedIndex].value;
+}
+
+$(function() {
+	$( "#qPublisher" ).autocomplete({
+	source: m_newspaperTitles
+	});
+});
+</script>

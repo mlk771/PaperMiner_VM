@@ -4,10 +4,11 @@
  <table>
   <tr>
    <td>Records:
-    <div id="raw-list-container"></div>
+   <div id="raw-list-container"></div>
    </td>  
    <td>Record:
     <div id="raw-record-container"></div>
+    <div id="csv-table-container" style="position: absolute; font-size:0pt;"></div>
     <div id="raw-ctl">
      <table id="ctl-table">
       <tr>
@@ -24,12 +25,14 @@
    </td>
   </tr>
  </table> 
-    
+ 
+         <!-- <button id="csv-download" onClick="csvDownload()">Download CSV</button>
+<p id="downloadify"></p> --!>
  <a id="fix-url" class="hidden" href="#" target="_blank" />   
  
  <p>&nbsp;
  <div id="raw-rb-pane" align="center">
- 
+  
  <table>
 	<tr>
 		<td>
@@ -82,4 +85,60 @@ function update() {
 	}
 }
 
+$(document).ready(function(){
+//open popup
+$("#citation_pop").click(function(){
+  $("#citation_overlay_form").fadeIn(500);
+  positionPopup();
+});
+
+//close popup
+$("#close").click(function(){
+    $("#citation_overlay_form").fadeOut(500);
+});
+});
+
+//position the popup at the center of the page
+function positionPopup(){
+  if(!$("#ciation_overlay_form").is(':visible')){
+    return;
+  } 
+  $("#citation_overlay_form").css({
+      left: ($(window).width() - $('#citation_overlay_form').width()) / 2,
+      top: ($(window).width() - $('#citation_overlay_form').width()) / 7,
+      position:'absolute'
+  });
+}
+
+//maintain the popup at center of the page when browser resized
+$(window).bind('resize',positionPopup);
+
+
+  /*function csvDownload() {
+	  Downloadify.create('downloadify',{
+	    filename: function(){
+	      return document.getElementById('filename').value;
+	    },
+	    data: function(){ 
+	      return document.getElementById('data').value;
+	    },
+	    onComplete: function(){ 
+	      alert('Your File Has Been Saved!'); 
+	    },
+	    onCancel: function(){ 
+	      alert('You have cancelled the saving of this file.');
+	    },
+	    onError: function(){ 
+	      alert('You must put something in the File Contents or there will be nothing to save!'); 
+	    },
+	    transparent: false,
+	    swf: 'media/downloadify.swf',
+	    downloadImage: 'images/download.png',
+	    width: 100,
+	    height: 30,
+	    transparent: true,
+	    append: false
+	  });
+  
+  }*/
 </script>
