@@ -252,7 +252,7 @@ var m_currentQuery = null;
 var m_locations    = null;
 var m_latPostcode = 0.0;
 var m_lngPostcode = 0.0;
-var m_text = '';
+var m_publisherName = '';
 var m_YearSet		= null;
 var m_listOfStates  = null;
 var m_newspaperTitles = [];
@@ -469,6 +469,7 @@ function resetQueryPane ()
   case Q_ADVANCED :
 	$('input#q2').val('');
 	$('select#z1').val('newspaper');
+	$('select#boolOp').val('');
 	$('input#q2Extra').val('');
 	$('input#qPublisher').val('');
     break;
@@ -898,9 +899,10 @@ function showRawResults (show)
   if (show) {
    _updateViews();
    
-   if (m_text != ''){
+   /*if (m_publisherName != ''){
 	   _sortRaw(3); 
-   } else { _sortRaw(4);}
+   } else { _sortRaw(4);}*/
+   _sortRaw(4);
    _showPane(_selById(RAW_VIEW));
   }
 }
@@ -1517,7 +1519,7 @@ function _doQuery (pos)
   if (pos === 0) {
     _resetState();
     $('#cc-pb11').button('enable');   
-	m_text =$('input#qPublisher').val();
+	m_publisherName = $('input#qPublisher').val();
   }
   var queryId = m_queryId;
   if (m_fetchSize < MAX_FETCH_SIZE) {
@@ -2197,6 +2199,7 @@ function _setCurrentQueryButtonState ()
  */
 function _updateCurrQueryPane ()
 {
+  $('tr#publiser-name-curr-pane').css({display:''});
   if ($(_selById(CURR_QUERY_PANE)).length > 0) {
     switch (m_currentQueryFormPane) {
     case Q_SIMPLE : 
@@ -2208,6 +2211,7 @@ function _updateCurrQueryPane ()
       break;
     case Q_ADVANCED :
 	  $('td#q11').html(m_advTerm1 + ' ' + m_booleanOp + ' ' + m_advTerm2);
+	  $('td#p11').html(m_publisherName);
       $('td#z11').html(m_currentZone);
       $('td#n11').html(m_totalRecs);
       $('td#n12').html(m_resultSet == null ? 0 : m_resultSet.length);
@@ -2218,6 +2222,9 @@ function _updateCurrQueryPane ()
       // FIXME: todo
       break;
     }
+    if (m_publisherName == '') {
+    	$('tr#publiser-name-curr-pane').css({display:'none'});
+	}
   }
 }
 
@@ -2352,7 +2359,7 @@ function _displayRawDataItem (id)
 		  for (var i = 0; i < zoneInfo.tags.length; i++) {
 			    // have to eval this as tag may be double level dotted ref
 			    var values = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[2].tag); 
-			    var match = (values.indexOf(m_text) > -1);
+			    var match = (values.indexOf(m_publisherName) > -1);
 			   // alert(match);
 			    if(match){
 			    	var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[i].tag);
@@ -2516,7 +2523,7 @@ function _sortRaw (sortType)
         var zoneInfo = _getZoneInfo(m_resultSet[i].zone);
         if ((zoneInfo.stag.length > 0) && isInRange(i)) {
         	var values = eval('m_resultSet[i].data.' + zoneInfo.tags[2].tag); 
-		    var match = (values.indexOf(m_text)> -1);
+		    var match = (values.indexOf(m_publisherName)> -1);
 		   // alert(match);
 		    if(match){
         	var srcId = eval('m_resultSet[i].data.' + zoneInfo.stag);

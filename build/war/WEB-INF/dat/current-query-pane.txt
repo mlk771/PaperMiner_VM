@@ -7,6 +7,10 @@
    <td class="td-name">Search Term:</td>
    <td id="q11"></td>
   </tr>
+  <tr id="publiser-name-curr-pane">
+   <td class="td-name">Publisher:</td>
+   <td id="p11"></td>
+  </tr>
   <tr>
    <td class="td-name">Search Zone:</td>
    <td id="z11"></td>
