@@ -258,6 +258,7 @@ var m_listOfStates  = null;
 var m_newspaperTitles = [];
 var m_newspaperIDs = [];
 var m_selectedTitleID = "";
+var m_publisherExists = false;
 
 /**
  * Invoked by index page onload trigger, does any required configuration.
@@ -465,6 +466,7 @@ function resetQueryPane ()
   case Q_SIMPLE : 
     $('input#q1').val('');
     $('select#z1').val('newspaper');
+    m_selectedTitleID = "";
     break;
   case Q_ADVANCED :
 	$('input#q2').val('');
@@ -472,6 +474,7 @@ function resetQueryPane ()
 	$('select#boolOp').val('');
 	$('input#q2Extra').val('');
 	$('input#qPublisher').val('');
+	m_selectedTitleID = "";
     break;
   case Q_CUSTOM :
     // FIXME: todo
@@ -498,11 +501,13 @@ function newQuery (show)
     if (m_run) {
       _popupDialog(INFO, 'Please stop the current query before starting another.');
     }
-    else {
-      _showPane(_selById(NEW_QUERY_PANE));		   	
-      addOptions();
-      m_selectedTitleID = "";
-      getFullnewspaperTitles();
+    else {  	
+    	_showPane(_selById(NEW_QUERY_PANE));
+    	getFullnewspaperTitles();
+    	updateSelectionPublisher();
+      //m_selectedTitleID = "";
+      
+      
     }
   }
 }
@@ -688,8 +693,8 @@ function _drawChart() {
         	renderer = $.jqplot.BarRenderer;
 		} else {
 			renderer = $.jqplot.PieRenderer;
-		}
-
+		}    
+        
         plot1 = $.jqplot('chart-container', [results], {
             // Only animate if we're not using excanvas (not in IE 7 or IE 8)..
             animate: !$.jqplot.use_excanvas,
@@ -710,6 +715,7 @@ function _drawChart() {
                 xaxis: {
                     renderer: $.jqplot.CategoryAxisRenderer,
                     ticks: labels,
+                    tickOptions:{ angle: -45 },
                     showTicks: false,
                 	label: xAxisLabel,
                 	labelOptions:{
@@ -1063,43 +1069,31 @@ function getFullnewspaperTitles ()
         //alert(m_newspaperTitles[12].toString());
       }
     });
-    addOptions();
 }
-
-
-function addOptions()
-{ 
-	//getFullnewspaperTitles();
-	//$("#publication-list").empty();
-	/*var itemid = document.getElementById('publication-list');	
-	var optn = document.createElement("option");
-	optn.text = "Select a Publisher";
-	optn.value = 0;
-	itemid.add(optn);
+function updateSelectionPublisher() {
 	
-	for ( var idx = 1; idx < m_newspaperTitles.length + 1; idx++) {
-		optn = document.createElement("option");
-		optn.text = m_newspaperTitles[idx - 1];
-		optn.value = m_newspaperIDs[idx - 1];
-		itemid.add(optn);
+	var str = document.getElementById("qPublisher").value;
+	//m_selectedTitleID = "";
+	//alert(str);
+	for (var i = 0; i < m_newspaperTitles.length; i++) {
+		if (str == m_newspaperTitles[i]) {
+			//alert("true" + " " + str + ' == ' + m_newspaperTitles[i]);
+			m_selectedTitleID = m_newspaperIDs[i];
+			m_publisherExists = true;
+			break;
+		} 
+		else  { 
+			m_selectedTitleID = "error";
+			m_publisherExists = false;
+		}
+	}
+	if (str == "") m_selectedTitleID = "";
+	/*if(m_selectedTitleID === "" ) { 
+//		_popupDialog(ALERT, "Publisher does not exist! Please type valid publisher name.");
+	//	$('input#qPublisher').val('');
+	m_selectedTitleID = "error";
 	}*/
-}
-
-function updatePublisherOptions() {
-	
-	/*$("#publication-list").empty();
-	var itemid = document.getElementById('publication-list');	
-	var optn = document.createElement("option");
-	optn.text = "Select a Publisher";
-	optn.value = 0;
-	itemid.add(optn);
-	
-	for ( var idx = 1; idx < m_newspaperTitles.length + 1; idx++) {
-		optn = document.createElement("option");
-		optn.text = m_newspaperTitles[idx - 1];
-		optn.value = idx;
-		itemid.add(optn);		
-	}*/
+	//alert(m_selectedTitleID.toString() + ' ' + m_publisherExists.toString());
 }
 
 
@@ -1407,19 +1401,18 @@ function _createQueryString ()
 	  if (m_advTerm2 != ''){
 		  m_currentTerm += '%20' + m_booleanOp + '%20' + m_advTerm2;// + '%22';
 		  str = '&zone=' + m_currentZone + 
-	      '&q=' + m_currentTerm +
-	      '&l-title=' + m_selectedTitleID;
-		  //alert(str.toString());
+	      '&q=' + m_currentTerm;
 	  }
 	  else 
 	  {
 		  str = '&zone=' + m_currentZone + 
-	      '&q=' + m_currentTerm +
-	      '&l-title=' + m_selectedTitleID;
+	      '&q=' + m_currentTerm;
+	      
 	  }
-	  
-	  
-	  
+	  if (m_publisherExists) {
+		str += '&l-title=' + m_selectedTitleID;
+	  }
+	  	  
 	  //alert(str.toString());
     break;
   case Q_CUSTOM:
@@ -1492,6 +1485,7 @@ function _resetState ()
   rbGroup.prop('checked', false);
   rbGroup[3].checked = true;
   $('div#y2k-timeline div').remove();
+  //m_publisherExists = false;
 
 }
 
@@ -1513,44 +1507,51 @@ function _updateTimeDisplay ()
  * Clears form if position < zero.
  * @param pos position in TROVE result set
  */
-function _doQuery (pos)
+function _doQuery (pos, publisherExists)
 {
 	// ASSERT m_key != null
-  if (pos === 0) {
-    _resetState();
-    $('#cc-pb11').button('enable');   
-	m_publisherName = $('input#qPublisher').val();
+  if (publisherExists == true || m_selectedTitleID == "" ) {
+	  if (pos === 0) {
+	    _resetState();
+	    $('#cc-pb11').button('enable');   
+		m_publisherName = $('input#qPublisher').val();
+	  }
+	  var queryId = m_queryId;
+	  if (m_fetchSize < MAX_FETCH_SIZE) {
+	    m_fetchSize = Math.min(MAX_FETCH_SIZE, m_fetchSize * 2);
+	  }
+	  var uri = TROVE_QUERY_URL + m_user.key + m_currentQuery + 
+	            '&s=' + pos + '&n=' + m_fetchSize +
+	            '&encoding=json' + 
+	            '&callback=?';
+	  $.getJSON(uri, function (data, status, jqXHR) {
+	      try {
+	        if (status == "success") {
+	          _updateTimeDisplay();
+	          _processData(data, pos, queryId);
+	        }
+	        else {
+	          alert('getJSON Error: ' + JSON.stringify(jqXHR));
+	        }
+	      }
+	      catch (ex) {
+	        alert(ex);
+	      }
+	    }).error(function(jqXHR, textStatus, errorThrown) {
+	      var msg = 'PaperMiner has detected an error on the TROVE server:<br>' + errorThrown +
+	        '<p>As this may impact your results, we suggest you stop and reexecute your query.' +
+	        'If the error persists, it may be due to server load, so wait a while. then tryb again.';
+	      _popupDialog(ALERT, msg, 400);
+	    });
+	  m_fetchStart = new Date().getTime();
+	  $('#busy-box').activity();
+	  _updateCurrQueryPane();
+  } 
+  else if (m_selectedTitleID == "error")
+  {
+	_popupDialog(ALERT, "Publisher does not exist! Please type valid publisher name.");
+	//$('input#qPublisher').val('');
   }
-  var queryId = m_queryId;
-  if (m_fetchSize < MAX_FETCH_SIZE) {
-    m_fetchSize = Math.min(MAX_FETCH_SIZE, m_fetchSize * 2);
-  }
-  var uri = TROVE_QUERY_URL + m_user.key + m_currentQuery + 
-            '&s=' + pos + '&n=' + m_fetchSize +
-            '&encoding=json' + 
-            '&callback=?';
-  $.getJSON(uri, function (data, status, jqXHR) {
-      try {
-        if (status == "success") {
-          _updateTimeDisplay();
-          _processData(data, pos, queryId);
-        }
-        else {
-          alert('getJSON Error: ' + JSON.stringify(jqXHR));
-        }
-      }
-      catch (ex) {
-        alert(ex);
-      }
-    }).error(function(jqXHR, textStatus, errorThrown) {
-      var msg = 'PaperMiner has detected an error on the TROVE server:<br>' + errorThrown +
-        '<p>As this may impact your results, we suggest you stop and reexecute your query.' +
-        'If the error persists, it may be due to server load, so wait a while. then tryb again.';
-      _popupDialog(ALERT, msg, 400);
-    });
-  m_fetchStart = new Date().getTime();
-  $('#busy-box').activity();
-  _updateCurrQueryPane();
 }
 
 
@@ -1569,7 +1570,7 @@ function _processData (data, pos, id)
       m_run = true;
       $('#busy-box').activity(true);
       $('#cc-pb11').button('option', 'label', 'Pause Query');
-      _doQuery(m_resultSet.length);
+      _doQuery(m_resultSet.length, true);
     }
     else {
       m_run = false;
@@ -1596,7 +1597,7 @@ function _processData (data, pos, id)
       
       // get next chunk underway before doing local housekeeping
       if (m_resultSet.length < m_totalRecs) {
-        _doQuery(m_resultSet.length);
+        _doQuery(m_resultSet.length, true);
       }
       else {
         $('#busy-box').activity(false);
@@ -2222,7 +2223,7 @@ function _updateCurrQueryPane ()
       // FIXME: todo
       break;
     }
-    if (m_publisherName == '') {
+    if (m_publisherName == "" || !m_publisherExists || m_currentQueryFormPane == Q_SIMPLE) {
     	$('tr#publiser-name-curr-pane').css({display:'none'});
 	}
   }
@@ -2325,71 +2326,70 @@ function exportAll2CSV() {
  */
 function _displayRawDataItem (id)
 {
-	  var rec = m_resultSet[id];
-	  var zoneInfo = _getZoneInfo(rec.zone);
-	  var html = '<table id="raw-record"><tr><td class="td-crud-name">Zone:</td><td>' + rec.zone + '</td></tr>';  
-	  var csvContents = '<table id="csv-export"><tr><td>Zone:</td><td>' + rec.zone + '</td></tr>';
-	  switch (m_currentQueryFormPane) {
-	  case Q_SIMPLE : 
-		  for (var i = 0; i < zoneInfo.tags.length; i++) {
-			    // have to eval this as tag may be double level dotted ref
-			    var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[i].tag);
-			    var idValue = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[0].tag);
-			    if ((value === null) && (zoneInfo.tags[i].tag == 'text')) {
-			      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
-			    }
-			    else if (zoneInfo.tags[i].isLink) {
-			    	html += '<tr class=""><td></td><td>' +
-				      '</a></br><a name="pdf-anchor" target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
-				      '"download="Document"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"/></a>&nbsp;</div>' +
-				      '<a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + 
-				      '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index" src="images/printIcon.png"/></a><a style="display:none;" id = "raw-trove-link" href="'+value+'">Edit in Trove</a>' +
-				      '&nbsp;<a target="_blank"><img name=cite-write-icon width=32 height=32 border=0 alt="Index" src="images/cite-icon.png" onclick="citeWrite('+id+')"/></a>' +
-				      '&nbsp;<a target="_blank"><img name=csv-icon width=32 height=32 border=0 alt="Index" src="images/csv-icon.png" onclick="export2CSV()"/></a>' +
-				      '<p id="pdf-tooltip">Right-click + save link as... to save the pdf file to your local machine.</p></td></tr>';
-			    }	
-			    else {
-			      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
-			      if (i <= 7) csvContents += '<tr><td>' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
-			    }
-			  }
-		  break;
-	  case Q_ADVANCED :
-		// Publication
-		  for (var i = 0; i < zoneInfo.tags.length; i++) {
-			    // have to eval this as tag may be double level dotted ref
-			    var values = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[2].tag); 
-			    var match = (values.indexOf(m_publisherName) > -1);
-			   // alert(match);
-			    if(match){
-			    	var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[i].tag);
-			    	var idValue = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[0].tag);
-			    	if ((value === null) && (zoneInfo.tags[i].tag == 'text')) {
-			    		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
-			    	}
-			    	else if (zoneInfo.tags[i].isLink) {
-			    		html += '<tr class=""><td></td><td>' +
-					      '</a></br><a name="pdf-anchor" target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
-					      '"download="Document"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"/></a>&nbsp;</div>' +
-					      '<a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + 
-					      '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index" src="images/printIcon.png"/></a><a style="display:none;" id = "raw-trove-link" href="'+value+'">Edit in Trove</a>' +
-					      '&nbsp;<a target="_blank"><img name=cite-write-icon width=32 height=32 border=0 alt="Index" src="images/cite-icon.png" onclick="citeWrite('+id+')"/></a>' +
-					      '&nbsp;<a target="_blank"><img name=csv-icon width=32 height=32 border=0 alt="Index" src="images/csv-icon.png" onclick="export2CSV()"/></a>' +
-					      '<p id="pdf-tooltip">Right-click + save link as... to save the pdf file to your local machine.</p></td></tr>';
-			    	}		
-			    	else {
-			    		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
-			    		if (i <= 7) csvContents += '<tr><td>' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
-			    	}
-		  		}
-			  }
-		  //var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[1].tag);
-		  if(value === $('select#qPublisher').val){	  
-			  var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[1].tag);
-			 html += '<tr><td class="td-crud-name">' + zoneInfo.tags[1].title + ':</td><td>' + value + '</td></tr>';
+	var rec = m_resultSet[id];
+	var zoneInfo = _getZoneInfo(rec.zone);
+	var html = '<table id="raw-record"><tr><td class="td-crud-name">Zone:</td><td>' + rec.zone + '</td></tr>';  
+	var csvContents = '<table id="csv-export"><tr><td>Zone:</td><td>' + rec.zone + '</td></tr>';
+	switch (m_currentQueryFormPane) {
+	case Q_SIMPLE : 
+	  for (var i = 0; i < zoneInfo.tags.length; i++) {
+	    // have to eval this as tag may be double level dotted ref
+	    var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[i].tag);
+	    var idValue = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[0].tag);
+	    if ((value === null) && (zoneInfo.tags[i].tag == 'text')) {
+	      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
 		  }
-	  
-	  break;
+		  else if (zoneInfo.tags[i].isLink) {
+		   	html += '<tr class=""><td></td><td>' +
+		      '</a></br><a name="pdf-anchor" target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
+		      '"download="Document"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"/></a>&nbsp;</div>' +
+		      '<a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + 
+		      '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index" src="images/printIcon.png"/></a><a style="display:none;" id = "raw-trove-link" href="'+value+'">Edit in Trove</a>' +
+		      '&nbsp;<a target="_blank"><img name=cite-write-icon width=32 height=32 border=0 alt="Index" src="images/cite-icon.png" onclick="citeWrite('+id+')"/></a>' +
+		      '&nbsp;<a target="_blank"><img name=csv-icon width=32 height=32 border=0 alt="Index" src="images/csv-icon.png" onclick="export2CSV()"/></a>' +
+		      '<p id="pdf-tooltip">Right-click + save link as... to save the pdf file to your local machine.</p></td></tr>';
+		   }	
+		   else {
+		     html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
+		     if (i <= 7) csvContents += '<tr><td>' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
+		   }
+		 }
+		break;
+	case Q_ADVANCED :
+	// Publication
+	   for (var i = 0; i < zoneInfo.tags.length; i++) {
+		  // have to eval this as tag may be double level dotted ref
+		  var values = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[2].tag); 
+		  var match = (values.indexOf(m_publisherName) > -1);
+		  // alert(match);
+		  if(match){
+			 var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[i].tag);
+			 var idValue = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[0].tag);
+			 if ((value === null) && (zoneInfo.tags[i].tag == 'text')) {
+			 	html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
+			 }
+			 else if (zoneInfo.tags[i].isLink) {
+			 	html += '<tr class=""><td></td><td>' +
+			    '</a></br><a name="pdf-anchor" target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
+			    '"download="Document"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"/></a>&nbsp;</div>' +
+			    '<a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + 
+			    '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index" src="images/printIcon.png"/></a><a style="display:none;" id = "raw-trove-link" href="'+value+'">Edit in Trove</a>' +
+			     '&nbsp;<a target="_blank"><img name=cite-write-icon width=32 height=32 border=0 alt="Index" src="images/cite-icon.png" onclick="citeWrite('+id+')"/></a>' +
+			     '&nbsp;<a target="_blank"><img name=csv-icon width=32 height=32 border=0 alt="Index" src="images/csv-icon.png" onclick="export2CSV()"/></a>' +
+			     '<p id="pdf-tooltip">Right-click + save link as... to save the pdf file to your local machine.</p></td></tr>';
+		  	}		
+		   	else {
+		   		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
+		   		if (i <= 7) csvContents += '<tr><td>' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
+		   	}
+		  }
+		 }
+		//var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[1].tag);
+		/*if(value === $('select#qPublisher').val){	  
+		  var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[1].tag);
+		  html += '<tr><td class="td-crud-name">' + zoneInfo.tags[1].title + ':</td><td>' + value + '</td></tr>';
+		}*/
+	    break;
 	  case Q_CUSTOM :
 	    // FIXME: todo
 	    break;
@@ -2401,10 +2401,10 @@ function _displayRawDataItem (id)
 	  $('div#csv-table-container').html(csvContents);
 	  m_rawRecordId = id;
 	  if (m_currentZone === 'newspaper') {
-	    $('button#rdv-pb1').button('enable');
+	     $('button#rdv-pb1').button('enable');
 	  }
 	  $('button#rdv-pb3').button('enable');
-	}
+}
 
 
 /**

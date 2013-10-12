@@ -23,7 +23,7 @@
    <td>
     <div class="pm-button-bar">
      <button id="nq-pb11" onClick="resetQueryPane()">Clear form</button>
-     <button id="nq-pb12" onClick="_doQuery(0)">Execute query</button>
+     <button id="nq-pb12" onClick="_doQuery(0, true)">Execute query</button>
     </div>
    </td>
   </tr>
@@ -68,8 +68,8 @@
    <td>
     <div class="pm-button-bar">
      <button id="nq-pb11" onClick="resetQueryPane()">Clear form</button>
-     <button id="nq-pb12" onClick="_doQuery(0)">Execute query</button>
-     <button id="nq-pb13" onClick="addOptions()">Get Details</button>
+     <button id="nq-pb12" onClick="_doQuery(0, m_publisherExists)">Execute query</button>
+     <!--<button id="nq-pb13" onClick="addOptions()">Get Details</button> -->
     </div>
    </td>
   </tr>
@@ -97,26 +97,6 @@
  </table>
 </div>
 <script>
-function updateSelectionPublisher() {
-	//m_selectedTitleID = m_newspaperIDs[document.getElementById("qPublisher").selectedIndex - 1];
-	
-	var str = document.getElementById("qPublisher").value;
-	//alert(str);
-	for (var i = 0; i < m_newspaperTitles.length; i++) {
-	    //alert(str + " == " + m_newspaperTitles[i]);
-		if (str == m_newspaperTitles[i]) {
-		    //alert("true");
-			m_selectedTitleID = m_newspaperIDs[i];
-			//alert(m_selectedTitleID.toString());
-			break;
-		}
-	}
-	//alert(m_selectedTitleID.toString());
-	
-	// var e = document.getElementById("publication-list");
-	// var strUser = e.options[e.selectedIndex].value;
-}
-
 $(function() {
 	$( "#qPublisher" ).autocomplete({
 	source: m_newspaperTitles
