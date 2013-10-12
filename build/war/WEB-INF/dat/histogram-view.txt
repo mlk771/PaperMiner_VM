@@ -13,22 +13,19 @@
 <table>
 	<tr>
 		<td>
-		<button id ="toggle-charts-button" onclick="_toggleChart()">Toggle chart</button>
+		<button id ="toggle-charts-button" onclick="_toggleChart()">View Pie chart</button>
 		</td>
-		<td>
+		<td id="histogram-contents">
 			Interval:
-		</td>
-		<td>
 			<input id="interval-input" type="textbox" size="4" maxlength="3" value="10">
-		</td>
-		<td>
 			Year From:
-		</td>
-		<td>
 			<input id="year-start" type="textbox" size="4" maxlength="4" value="1860">
 			<span>   to:</span>
 			<input id="year-end" type="textbox" size="4" maxlength="4" value="1980">
-			<button id="histo-button">Refresh</button>
+		</td>
+		<td>
+			<button id="histo-button" onclick="_refreshChart()">Refresh</button>
+			<input id="auto-refresh" type="checkBox" style="display:none;">Auto-refresh</input>
 		</td>
 	</tr>
 </table>
@@ -39,15 +36,7 @@ $(document).ready(function () {
 	_updateViews();
 });
 
-$("#histo-button").click(function () {
-	
-	var start = parseInt($('#year-start').val());
-	var end = parseInt($('#year-end').val());
-	
-	_updateSlider(start, end);
 
-	$("#chart-container").empty();
-	showHistogram(true);
-});
+//$("#histo-button").click();
 
 </script>

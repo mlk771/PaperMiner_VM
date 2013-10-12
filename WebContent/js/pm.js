@@ -259,6 +259,7 @@ var m_newspaperTitles = [];
 var m_newspaperIDs = [];
 var m_selectedTitleID = "";
 var m_publisherExists = false;
+var m_csvContents = "";
 
 /**
  * Invoked by index page onload trigger, does any required configuration.
@@ -505,9 +506,6 @@ function newQuery (show)
     	_showPane(_selById(NEW_QUERY_PANE));
     	getFullnewspaperTitles();
     	updateSelectionPublisher();
-      //m_selectedTitleID = "";
-      
-      
     }
   }
 }
@@ -631,32 +629,60 @@ function showHistogram (show)
   }
   if(show)
   {
-	  _updateViews();
-// 	var format =																																 new Array();
-// 	for ( var idx = 0; idx < results.length; idx++) {
-//		var tempArray = new Array(
-//			     [results[idx], labels[idx], '#0000FF']);
-//		
-//		format.push(tempArray[0]);
-//	}
+    _updateViews();
 	_drawChart();
  	_showPane(_selById(HIST_VIEW));
+ 	
+ 	//setInterval(function(){_tryRefreshChart();},6500);
   }
 }
 
+/*
+function _tryRefreshChart() {
+
+	if($('#auto-refresh').is(':checked')){
+		setTimeout(function(){	
+	 		$(document).ready(function(){
+	 	
+	 			_refreshChart();
+	 		});
+		}, 4000);
+		if($('#auto-refresh').is(':checked')){
+			_tryRefreshChart();
+		} else return;
+	}
+}
+*/
 function _toggleChart() {
 	// either 1 or 0
     m_chartType = (m_chartType + 1) % 2;
     _drawChart();
 	$("#pie-heading").toggle();
 	$("#histogram-heading").toggle();
+ 	if (m_chartType == PIE_TOGGLED) {
+ 		$('td#histogram-contents').css({display:'none'});
+ 		$('#toggle-charts-button').text('View Histogram');
+ 	} else if (m_chartType == HISTOGRAM_TOGGLED) {
+ 		$('td#histogram-contents').css({display:'inline'});
+ 		$('#toggle-charts-button').text('View Pie chart');
+ 	}
+}
+
+function _refreshChart() {
+	
+	var start = parseInt($('#year-start').val());
+	var end = parseInt($('#year-end').val());
+	
+	_updateSlider(start, end);
+
+	$("#chart-container").empty();
+	showHistogram(true);
 }
 
 /**
  * Draw the both charts in the Histogram page
  */
 function _drawChart() {
-	
 	$("#chart-container").empty();
 
 	var startYear =  parseInt(document.getElementById('year-start').value);
@@ -665,7 +691,21 @@ function _drawChart() {
  	var chartTitle = '';
  	var xAxisLabel = '';
     var chartContainerWidth = document.getElementById("chart-container");
- 	if (interval <= 5) chartContainerWidth.style.width = "1200px";
+    if (isNaN(interval)) { 
+    	interval = 10; 
+    	$('#interval-input').val('10');
+    }
+    else if (interval < 1) { 
+    	interval = 1; 
+    	$('#interval-input').val('1');
+    } 
+    else if (interval > (endYear - startYear)/2) {
+    	interval = Math.ciel((endYear - startYear)/2);
+    	$('#interval-input').val(interval.toString()); 
+    }
+ 	if (interval <= 5) {
+ 		chartContainerWidth.style.width = "1200px";
+ 	}
  	else  chartContainerWidth.style.width = "850px";
 	if (startYear < 1800 || endYear > 2000 || endYear < startYear 
 		|| startYear == ' ' || endYear == ' ' || startYear == null || endYear == null) {
@@ -676,21 +716,25 @@ function _drawChart() {
  	var results = [];
  	var labels = _getHistogramLabels(startYear, endYear, interval);
  	if (m_chartType == PIE_TOGGLED) {
+ 		$('td#histogram-contents').css({display:'none'});
  	 	results = _getResultsByStates();
  	 	chartTitle = '% of Publications by AUS States';
  	} else if (m_chartType == HISTOGRAM_TOGGLED) {
+ 		$('td#histogram-contents').css({display:'inline'});
  		results = _getResultsByYearRange(startYear, endYear, interval);
  	 	chartTitle = '# of Publication Hits per Interval';
  	 	xAxisLabel = 'Years';
  	}
  	
  	setTimeout(function(){
+ 		
  		$(document).ready(function(){
         $.jqplot.config.enablePlugins = true;
 
         var renderer;
         if (m_chartType == HISTOGRAM_TOGGLED) {
         	renderer = $.jqplot.BarRenderer;
+        	
 		} else {
 			renderer = $.jqplot.PieRenderer;
 		}    
@@ -762,8 +806,8 @@ function _drawChart() {
 	                }
 	            );
 	        //$('.jqplot-xaxis').css('display', 'none');
-	    });
- 	}, 500); 
+	        });
+ 		}, 500);
 }
 
 function _getResultsByYearRange (start, end, interval) 
@@ -904,12 +948,9 @@ function showRawResults (show)
   }
   if (show) {
    _updateViews();
-   
-   /*if (m_publisherName != ''){
-	   _sortRaw(3); 
-   } else { _sortRaw(4);}*/
    _sortRaw(4);
    _showPane(_selById(RAW_VIEW));
+   _exportAll2CSV();
   }
 }
 
@@ -1478,7 +1519,8 @@ function _resetState ()
   m_newspaperIDs = new Array();
   $('div#raw-list-container').html('');
   $('div#raw-record-container').html('');
-  $('#ctl-table button').button('disable');   
+  $('#ctl-table button').button('disable');
+  $('div#csv-div').css({display:'inline'});
   $('#cc-pb11').button('option', 'label', 'Pause Query');
   $('#cc-pb11').button('disable');   
   var rbGroup = $('input[name="raw-sort-rb"]');
@@ -2226,6 +2268,10 @@ function _updateCurrQueryPane ()
     if (m_publisherName == "" || !m_publisherExists || m_currentQueryFormPane == Q_SIMPLE) {
     	$('tr#publiser-name-curr-pane').css({display:'none'});
 	}
+    if (m_resultSet == null)
+    	$('div#csv-div').css({display:'none'});
+    else 
+    	$('div#csv-div').css({display:'inline'});
   }
 }
 
@@ -2316,9 +2362,32 @@ function export2CSV() {
     });
     window.open('data:text/csv;charset=UTF-8,' + encodeURIComponent(csv));
 }
-function exportAll2CSV() {
-	var records = m_resultSet;
+function _exportAll2CSV() {
+	var rec = m_resultSet[0];
+	var zoneInfo = _getZoneInfo(rec.zone);
+	m_csvContents = '<table id="csv-export"><tr><td>Zone</td><td>ID</td><td>Date</td><td>Source</td><td>Category</td><td>Heading</td><td>Score</td><td>Revelance</td><td>Page</td><td>Snippet</td></tr>';
+	for ( var setIndex = 0; setIndex < m_resultSet.length; setIndex++) {
+		m_csvContents += '<tr>';
+		for (var i = 0; i < zoneInfo.tags.length; i++) {
+			// have to eval this as tag may be double level dotted ref					  
+			var value = eval('m_resultSet[' + setIndex + '].data.' + zoneInfo.tags[i].tag);
+			
+			if ((value === null) && (zoneInfo.tags[i].tag == 'text')) {
+			}
+			else if (zoneInfo.tags[i].isLink) {
+			
+			}		
+			else {
+				if (i <= 8) m_csvContents += '<td>' + value + '</td>';
+			}
+		}
+		m_csvContents += '</tr>';
+	}
+	m_csvContents += '</table>';
+	$('div#csv-table-container').html(m_csvContents); 
 }
+
+
 
 /**
  * Display info contained in a response
@@ -2329,7 +2398,6 @@ function _displayRawDataItem (id)
 	var rec = m_resultSet[id];
 	var zoneInfo = _getZoneInfo(rec.zone);
 	var html = '<table id="raw-record"><tr><td class="td-crud-name">Zone:</td><td>' + rec.zone + '</td></tr>';  
-	var csvContents = '<table id="csv-export"><tr><td>Zone:</td><td>' + rec.zone + '</td></tr>';
 	switch (m_currentQueryFormPane) {
 	case Q_SIMPLE : 
 	  for (var i = 0; i < zoneInfo.tags.length; i++) {
@@ -2340,20 +2408,22 @@ function _displayRawDataItem (id)
 	      html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
 		  }
 		  else if (zoneInfo.tags[i].isLink) {
-		   	html += '<tr class=""><td></td><td>' +
-		      '</a></br><a name="pdf-anchor" target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
-		      '"download="Document"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"/></a>&nbsp;</div>' +
-		      '<a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + 
-		      '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index" src="images/printIcon.png"/></a><a style="display:none;" id = "raw-trove-link" href="'+value+'">Edit in Trove</a>' +
-		      '&nbsp;<a target="_blank"><img name=cite-write-icon width=32 height=32 border=0 alt="Index" src="images/cite-icon.png" onclick="citeWrite('+id+')"/></a>' +
-		      '&nbsp;<a target="_blank"><img name=csv-icon width=32 height=32 border=0 alt="Index" src="images/csv-icon.png" onclick="export2CSV()"/></a>' +
-		      '<p id="pdf-tooltip">Right-click + save link as... to save the pdf file to your local machine.</p></td></tr>';
+		   	html += '<tr class=""><td><p id="pdf-label">PDF Download</p><p id="print-label">Print</p>' +
+		   	  '<p id="cite-label">Cite</p></td><td>' +
+		      '</br><div style="width: 160px;"><div id="pdf-div" onmouseover="pdfLabelon()" onmouseout="pdfLabeloff()" style="float: left; width: 45px;"><a name="pdf-anchor" target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
+		      '"download="Document"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"/></a></div>&nbsp;' +
+		      '<div id="print-div" onmouseover="printLabelon()" onmouseout="printLabeloff()" style="float: left; width: 45px;"><a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + 
+		      '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index" src="images/printIcon.png"/></a></div>' +
+		      '&nbsp;<div id="cite-div" onmouseover="citeLabelon()" onmouseout="citeLabeloff()" style="float: left; width: 45px;"><a target="_blank"><img name=cite-write-icon width=32 height=32 border=0 alt="Index" src="images/cite-icon.png" onclick="citeWrite('+id+')" style="cursor:pointer;"/></a></div></div>' +
+		      // '&nbsp;<a target="_blank"><img name=csv-icon width=32 height=32 border=0 alt="Index" src="images/csv-icon.png" onclick="export2CSV()"/></a>' +
+		     '</td></tr>';
 		   }	
 		   else {
 		     html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
-		     if (i <= 7) csvContents += '<tr><td>' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
+		     //if (i <= 7) csvContents += '<tr><td>' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
 		   }
 		 }
+	  //_exportAll2CSV();
 		break;
 	case Q_ADVANCED :
 	// Publication
@@ -2369,41 +2439,38 @@ function _displayRawDataItem (id)
 			 	html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td><button id="rdv-pbx" onClick="refreshRecord()">Load full text</button></td></tr>';
 			 }
 			 else if (zoneInfo.tags[i].isLink) {
-			 	html += '<tr class=""><td></td><td>' +
-			    '</a></br><a name="pdf-anchor" target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
-			    '"download="Document"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"/></a>&nbsp;</div>' +
-			    '<a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + 
-			    '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index" src="images/printIcon.png"/></a><a style="display:none;" id = "raw-trove-link" href="'+value+'">Edit in Trove</a>' +
-			     '&nbsp;<a target="_blank"><img name=cite-write-icon width=32 height=32 border=0 alt="Index" src="images/cite-icon.png" onclick="citeWrite('+id+')"/></a>' +
-			     '&nbsp;<a target="_blank"><img name=csv-icon width=32 height=32 border=0 alt="Index" src="images/csv-icon.png" onclick="export2CSV()"/></a>' +
-			     '<p id="pdf-tooltip">Right-click + save link as... to save the pdf file to your local machine.</p></td></tr>';
+				html += '<tr class=""><td><p id="pdf-label">PDF Download</p><p id="print-label">Print</p>' +
+			   	  '<p id="cite-label">Cite</p></td><td>' +
+			      '</br><div style="width: 160px;"><div id="pdf-div" onmouseover="pdfLabelon()" onmouseout="pdfLabeloff()" style="float: left; width: 45px;"><a name="pdf-anchor" target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticlePdf/'+ idValue + 
+			      '"download="Document"><img name=pdf-download width=32 height=32 border=0 alt="Index"src="images/pdfIcon.png"/></a></div>&nbsp;' +
+			      '<div id="print-div" onmouseover="printLabelon()" onmouseout="printLabeloff()" style="float: left; width: 45px;"><a target="_blank" href="http://trove.nla.gov.au/ndp/del/printArticleJpg/'+ idValue + 
+			      '?print=y"><img name=pdf-print width=32 height=32 border=0 alt="Index" src="images/printIcon.png"/></a></div>' +
+			      '&nbsp;<div id="cite-div" onmouseover="citeLabelon()" onmouseout="citeLabeloff()" style="float: left; width: 45px;"><a target="_blank"><img name=cite-write-icon width=32 height=32 border=0 alt="Index" src="images/cite-icon.png" onclick="citeWrite('+id+')" style="cursor:pointer;"/></a></div></div>' +
+			      // '&nbsp;<a target="_blank"><img name=csv-icon width=32 height=32 border=0 alt="Index" src="images/csv-icon.png" onclick="export2CSV()"/></a>' +
+			     '</td></tr>';
 		  	}		
 		   	else {
 		   		html += '<tr><td class="td-crud-name">' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
-		   		if (i <= 7) csvContents += '<tr><td>' + zoneInfo.tags[i].title + ':</td><td>' + value + '</td></tr>';
 		   	}
 		  }
-		 }
-		//var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[1].tag);
-		/*if(value === $('select#qPublisher').val){	  
-		  var value = eval('m_resultSet[' + id + '].data.' + zoneInfo.tags[1].tag);
-		  html += '<tr><td class="td-crud-name">' + zoneInfo.tags[1].title + ':</td><td>' + value + '</td></tr>';
-		}*/
-	    break;
+	   }
+	   //_exportAll2CSV();   
+		break;
 	  case Q_CUSTOM :
 	    // FIXME: todo
 	    break;
 	  }
 	  
 	  html += '</table>';
-	  csvContents += '</table>';
 	  $(_selById(RAW_RECORD)).html(html);
-	  $('div#csv-table-container').html(csvContents);
 	  m_rawRecordId = id;
 	  if (m_currentZone === 'newspaper') {
 	     $('button#rdv-pb1').button('enable');
 	  }
 	  $('button#rdv-pb3').button('enable');
+	  $('p#pdf-label').css({display:'none'});
+	  $('p#print-label').css({display:'none'});
+	  $('p#cite-label').css({display:'none'});
 }
 
 
