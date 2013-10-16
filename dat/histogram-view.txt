@@ -25,7 +25,7 @@
 		</td>
 		<td>
 			<button id="histo-button" onclick="_refreshChart()">Refresh</button>
-			<input id="auto-refresh" type="checkBox" style="display:none;">Auto-refresh</input>
+			<!--<input id="auto-refresh" type="checkBox" style="display:none;">Auto-refresh</input>-->
 		</td>
 	</tr>
 </table>

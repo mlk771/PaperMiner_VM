@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta content="text/html; charset=UTF-8" http-equiv="content-type" />
+  <title>Test Suite</title>
+</head>
+<body>
+<table id="suiteTable" cellpadding="1" cellspacing="1" border="1" class="selenium"><tbody>
+<tr><td><b>Test Suite</b></td></tr>
+<tr><td><a href="CreateNewUser">CreateNewUser</a></td></tr>
+<tr><td><a href="LoginUser">LoginUser</a></td></tr>
+<tr><td><a href="SimpleSearch">SimpleSearch</a></td></tr>
+<tr><td><a href="postCodeZoom">postCodeZoom</a></td></tr>
+<tr><td><a href="AdvanceSearchAND">AdvanceSearchAND</a></td></tr>
+<tr><td><a href="AdvanceSearchOR">AdvanceSearchOR</a></td></tr>
+<tr><td><a href="AdvanceSearchNOT">AdvanceSearchNOT</a></td></tr>
+<tr><td><a href="ShowHistogram">ShowHistogram</a></td></tr>
+<tr><td><a href="ShowPieGraph">ShowPieGraph</a></td></tr>
+<tr><td><a href="changeYearRange">changeYearRange</a></td></tr>
+<tr><td><a href="ChangeYearInterval">ChangeYearInterval</a></td></tr>
+<tr><td><a href="ShowCitation">ShowCitation</a></td></tr>
+<tr><td><a href="ChangeYearIntervalFromDiffViews">ChangeYearIntervalFromDiffViews</a></td></tr>
+<tr><td><a href="PublisherAdvanceSearch">PublisherAdvanceSearch</a></td></tr>
+<tr><td><a href="DownloadPDF">DownloadPDF</a></td></tr>
+<tr><td><a href="DownloadCSV">DownloadCSV</a></td></tr>
+<tr><td><a href="PrintArticle">PrintArticle</a></td></tr>
+</tbody></table>
+</body>
+</html>
